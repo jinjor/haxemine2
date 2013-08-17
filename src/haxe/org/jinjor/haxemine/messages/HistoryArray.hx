@@ -47,11 +47,11 @@ class HistoryArray<T> {
         cursor = 0;
         
         try{
-            trace('');
-            trace(untyped array[0].shortName);
-            trace(untyped array[1].shortName);
-            trace(untyped array[2].shortName);
-            trace(untyped array[3].shortName);
+            //trace('');
+            //trace(untyped array[0].shortName);
+            //trace(untyped array[1].shortName);
+            //trace(untyped array[2].shortName);
+            //trace(untyped array[3].shortName);
         }catch(e:Dynamic){
         }
     }

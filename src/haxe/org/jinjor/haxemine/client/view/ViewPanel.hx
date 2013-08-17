@@ -10,16 +10,16 @@ import org.jinjor.haxemine.client.view.SearchPanel;
 class ViewPanel {
     
     private static var template = '
-<div id="view_panel"/>
+<div id="view_panel">
     <div id="tabsContainer" >
-        <span class="view-tab selected(\'tasks\')" ng-click="t(\'tasks\')">Tasks</span>
-        <span class="view-tab selected(\'search\')" ng-click="t(\'search\')">Search</span>
+        <span class="view-tab {{selected(\'tasks\')}}" ng-click="t(\'tasks\')">Tasks</span>
+        <span class="view-tab {{selected(\'search\')}}" ng-click="t(\'search\')">Search</span>
     </div>
     <div id="panelsContainer">
-        <div>
+        <div ng-show="selected(\'tasks\')">
             <tasklist session="session"></tasklist>
         </div>
-        <div>
+        <div ng-show="selected(\'search\')">
             <search session="session"></search>
         </div>
     </div>
@@ -32,18 +32,16 @@ class ViewPanel {
                 restrict: 'E',
                 replace: true,
                 scope: {
-                    socket: '=',
                     session: '='
                 },
                 template: template,
                 link: function(scope, element, attrs) {
-                    var session = scope.session;
                     var selected = 'tasks';
-                    scope.c = function(name){
+                    scope.t = function(name){
                         selected = name;
                     };
                     scope.selected = function(name){
-                        return selected == name;
+                        return selected == name ? 'selected' : '';
                     };
                 }
             }

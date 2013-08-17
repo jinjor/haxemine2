@@ -1719,7 +1719,7 @@ org.jinjor.haxemine.client.Session = $hxClasses["org.jinjor.haxemine.client.Sess
 	var _g = this;
 	this.saveM = new org.jinjor.haxemine.messages.SaveM(socket);
 	this.compileErrors = [];
-	this.searchResults = null;
+	this.searchResults = [];
 	this.dirs = [];
 	var that = this;
 	this.socket = socket;
@@ -1774,10 +1774,6 @@ org.jinjor.haxemine.client.Session = $hxClasses["org.jinjor.haxemine.client.Sess
 			++_g1;
 			task.reset();
 		}
-	});
-	this.onLastTaskProgressChanged.sub("CompileErrorPanel.new",function(_) {
-	});
-	this.onAllFilesChanged.sub("FileSelector.new",function(_) {
 	});
 };
 org.jinjor.haxemine.client.Session.__name__ = ["org","jinjor","haxemine","client","Session"];
@@ -1940,6 +1936,8 @@ org.jinjor.haxemine.client.view.Dir.prototype = {
 	,name: null
 	,__class__: org.jinjor.haxemine.client.view.Dir
 }
+org.jinjor.haxemine.client.view.FileSelector = $hxClasses["org.jinjor.haxemine.client.view.FileSelector"] = function() { }
+org.jinjor.haxemine.client.view.FileSelector.__name__ = ["org","jinjor","haxemine","client","view","FileSelector"];
 if(!org.jinjor.haxemine.messages) org.jinjor.haxemine.messages = {}
 org.jinjor.haxemine.messages.SaveFileDto = $hxClasses["org.jinjor.haxemine.messages.SaveFileDto"] = function(fileName,text) {
 	this.fileName = fileName;
@@ -1951,9 +1949,9 @@ org.jinjor.haxemine.messages.SaveFileDto.prototype = {
 	,fileName: null
 	,__class__: org.jinjor.haxemine.messages.SaveFileDto
 }
-org.jinjor.haxemine.client.view.FileSelector = $hxClasses["org.jinjor.haxemine.client.view.FileSelector"] = function() { }
-org.jinjor.haxemine.client.view.FileSelector.__name__ = ["org","jinjor","haxemine","client","view","FileSelector"];
-org.jinjor.haxemine.client.view.FileSelector.hasCompileError = function(session,file) {
+org.jinjor.haxemine.client.view.Folder = $hxClasses["org.jinjor.haxemine.client.view.Folder"] = function() { }
+org.jinjor.haxemine.client.view.Folder.__name__ = ["org","jinjor","haxemine","client","view","Folder"];
+org.jinjor.haxemine.client.view.Folder.hasCompileError = function(session,file) {
 	var found = false;
 	Lambda.foreach(session.getCompileErrors(),function(error) {
 		if(session.getAllFiles().get(error.path) == file) {
@@ -1964,7 +1962,7 @@ org.jinjor.haxemine.client.view.FileSelector.hasCompileError = function(session,
 	});
 	return found;
 }
-org.jinjor.haxemine.client.view.FileSelector.saveNewFile = function(saveM,session,pathFromProjectRoot,text) {
+org.jinjor.haxemine.client.view.Folder.saveNewFile = function(saveM,session,pathFromProjectRoot,text) {
 	var dup = false;
 	var $it0 = session.getAllFiles().iterator();
 	while( $it0.hasNext() ) {
@@ -1976,8 +1974,6 @@ org.jinjor.haxemine.client.view.FileSelector.saveNewFile = function(saveM,sessio
 	}
 	if(dup) js.Lib.alert(pathFromProjectRoot + " already exists."); else saveM.pub(new org.jinjor.haxemine.messages.SaveFileDto(pathFromProjectRoot,text));
 }
-org.jinjor.haxemine.client.view.Folder = $hxClasses["org.jinjor.haxemine.client.view.Folder"] = function() { }
-org.jinjor.haxemine.client.view.Folder.__name__ = ["org","jinjor","haxemine","client","view","Folder"];
 org.jinjor.haxemine.client.view.Menu = $hxClasses["org.jinjor.haxemine.client.view.Menu"] = function() { }
 org.jinjor.haxemine.client.view.Menu.__name__ = ["org","jinjor","haxemine","client","view","Menu"];
 org.jinjor.haxemine.client.view.SearchPanel = $hxClasses["org.jinjor.haxemine.client.view.SearchPanel"] = function() { }
@@ -2088,11 +2084,6 @@ org.jinjor.haxemine.messages.HistoryArray.prototype = {
 		while(i > this.max) this.array.pop();
 		this.cursor = 0;
 		try {
-			console.log("");
-			console.log(this.array[0].shortName);
-			console.log(this.array[1].shortName);
-			console.log(this.array[2].shortName);
-			console.log(this.array[3].shortName);
 		} catch( e ) {
 		}
 	}
@@ -2427,36 +2418,28 @@ org.jinjor.haxemine.client.HaxemineModule.module.directive("compileerror",functi
 		};
 	}};
 });
-console.log("FileSelector");
-console.log(org.jinjor.haxemine.client.HaxemineModule.module);
 org.jinjor.haxemine.client.HaxemineModule.module.directive("fileselector",function() {
 	return { restrict : "E", replace : true, scope : { session : "="}, template : org.jinjor.haxemine.client.view.FileSelector.template, link : function(scope,element,attrs) {
-		console.log("0");
-		scope.log = function(f) {
-			console.log(f);
-		};
+	}};
+});
+org.jinjor.haxemine.client.HaxemineModule.module.directive("folder",function() {
+	return { restrict : "E", replace : true, scope : { session : "=", dir : "="}, template : org.jinjor.haxemine.client.view.Folder.template, link : function(scope,element,attrs) {
 		scope.c = function(session,path) {
-			console.log("2");
 			var file = session.getAllFiles().get(path);
 			session.selectNextFile(file,null);
 		};
 		scope.d = function(session,path) {
-			console.log("1");
 			var guessedPackage = path.replace("/",".");
 			var classPath = js.Lib.window.prompt("create new class",guessedPackage + ".");
 			if(classPath != null) {
 				var splittedClass = classPath.split(".");
 				var className = splittedClass[splittedClass.length - 1];
 				if(className == "") js.Lib.alert("invalid name"); else {
-					var text = "package ${classPath.substring(0, classPath.length - className.length - 1)};\r\n\r\nclass ${className} {\r\n\r\n    public function new() {\r\n        \r\n    }\r\n\r\n}";
-					org.jinjor.haxemine.client.view.FileSelector.saveNewFile(session.saveM,session,Std.string(path) + "/" + className + ".hx",text);
+					var text = "package ${classPath.substring(0, classPath.length - className.length - 1)};\r\n\r\nclass ${className} {\r\n\r\n    public function new() {\r\n        \r\n    }\r\n}";
+					org.jinjor.haxemine.client.view.Folder.saveNewFile(session.saveM,session,Std.string(path) + "/" + className + ".hx",text);
 				}
 			}
 		};
-	}};
-});
-org.jinjor.haxemine.client.HaxemineModule.module.directive("folder",function() {
-	return { restrict : "E", replace : true, scope : { session : "="}, template : org.jinjor.haxemine.client.view.Folder.template, link : function(scope,element,attrs) {
 		scope.change = function(open) {
 			scope.open = open;
 		};
@@ -2469,13 +2452,14 @@ org.jinjor.haxemine.client.HaxemineModule.module.directive("menu",function() {
 	return { restrict : "E", replace : true, scope : { session : "="}, template : org.jinjor.haxemine.client.view.Menu.template, link : function(scope,element,attrs) {
 	}};
 });
-org.jinjor.haxemine.client.HaxemineModule.module.directive("search_panel",function() {
+org.jinjor.haxemine.client.HaxemineModule.module.directive("search",function() {
 	return { restrict : "E", replace : true, scope : { session : "="}, template : org.jinjor.haxemine.client.view.SearchPanel.template, link : function(scope,element,attrs) {
 		scope.a = function(session,result) {
 			var file = session.getAllFiles().get(result.fileName);
 			session.selectNextFile(file,result.row);
 		};
 		scope.s = function(session,word) {
+			console.log(word);
 			session.search(word);
 		};
 	}};
@@ -2517,7 +2501,7 @@ org.jinjor.haxemine.client.HaxemineModule.module.directive("task",function() {
 		};
 	}};
 });
-var template = "\r\n<div>\r\n    <menu session=\"session\"></menu>\r\n    <fileselector session=\"session\"></fileselector>\r\n    <aceeditor session=\"session\"></aceeditor>\r\n    <hr/>\r\n    <viewpanel session=\"session\"></viewpanel>\r\n</div>\r\n        ";
+var template = "\r\n<div>\r\n    <menu session=\"session\"></menu>\r\n    <fileselector session=\"session\"></fileselector>\r\n    <div id=\"right\">\r\n        <aceeditor session=\"session\"></aceeditor>\r\n        <hr/>\r\n        <viewpanel session=\"session\"></viewpanel>\r\n    </div>\r\n</div>\r\n        ";
 console.log("View");
 org.jinjor.haxemine.client.HaxemineModule.module.directive("haxemine",function() {
 	return { restrict : "E", replace : true, scope : true, template : template, link : function(scope,element,attrs) {
@@ -2527,14 +2511,13 @@ org.jinjor.haxemine.client.HaxemineModule.module.directive("haxemine",function()
 	}};
 });
 org.jinjor.haxemine.client.HaxemineModule.module.directive("viewpanel",function() {
-	return { restrict : "E", replace : true, scope : { socket : "=", session : "="}, template : org.jinjor.haxemine.client.view.ViewPanel.template, link : function(scope,element,attrs) {
-		var session = scope.session;
+	return { restrict : "E", replace : true, scope : { session : "="}, template : org.jinjor.haxemine.client.view.ViewPanel.template, link : function(scope,element,attrs) {
 		var selected = "tasks";
-		scope.c = function(name) {
+		scope.t = function(name) {
 			selected = name;
 		};
 		scope.selected = function(name) {
-			return selected == name;
+			return selected == name?"selected":"";
 		};
 	}};
 });
@@ -2547,13 +2530,13 @@ haxe.Unserializer.CODES = null;
 js.Lib.onerror = null;
 org.jinjor.haxemine.client.view.AceEditorView.template = "\r\n<div id=\"editor\" reset=\"reset(session)\"/></div>\r\n    ";
 org.jinjor.haxemine.client.view.CompileErrorPanel.template = "\r\n<div id=\"compile-error-panel\"/>\r\n    <tasklist session=\"session\"></tasklist>\r\n    <div id=\"compile-errors\">\r\n        <ul>\r\n            <li ng-repeat=\"error in session.getCompileErrors()\">\r\n                <a ng-click=\"c(session, error)\">{{error.originalMessage}}</a>\r\n            </li>\r\n        </ul>\r\n    </div>\r\n</div>\r\n    ";
-org.jinjor.haxemine.client.view.FileSelector.template = "\r\n<div id=\"all-haxe-files\">\r\n    <label class=\"file_selector_dir\" ng-click\"d(session, name)\">{{name}}</label>\r\n    <ul ng-repeat=\"dir in session.dirs\">\r\n    {{dir.name}}{{log(dir.name)}}\r\n        <li ng-repeat=\"file in dir.files\">\r\n            <a ng-click=\"c(session, file.pathFromProjectRoot)\">{{file.shortName}}</a>\r\n        </li>\r\n    </ul>\r\n</div>\r\n";
-org.jinjor.haxemine.client.view.Folder.template = "\r\n<div class=\"folder\"/>\r\n    <div>\r\n        <div ng-show=\"open\" class=\"closeMark\" ng-click=\"change(false)\">-</div>\r\n        <div ng-show=\"!open\" class=\"openMark\" ng-click=\"change(true)\">+</div>\r\n        <label class=\"file_selector_dir\">{{}}</label>\r\n    </div>\r\n    <div ng-show=\"open\">\r\n        <ul>\r\n            <li ng-repeat=\"file in files\">\r\n                <a click=\"c(session, file)\">{{file.name}}</a>\r\n            </li>\r\n        </ul>\r\n    </div>\r\n</div>\r\n    ";
+org.jinjor.haxemine.client.view.FileSelector.template = "\r\n<div id=\"all-haxe-files\">\r\n    <label class=\"file_selector_dir\" ng-click\"d(session, name)\">{{name}}</label>\r\n    \r\n    <ul ng-repeat=\"dir in session.dirs\">\r\n        <folder session=\"session\" dir=\"dir\"></folder>\r\n    </ul>\r\n</div>\r\n";
+org.jinjor.haxemine.client.view.Folder.template = "\r\n<div class=\"folder\"/>\r\n    <div>\r\n        <div ng-show=\"open\" class=\"closeMark\" ng-click=\"change(false)\">-</div>\r\n        <div ng-show=\"!open\" class=\"openMark\" ng-click=\"change(true)\">+</div>\r\n        <label class=\"file_selector_dir\">{{dir.name}}</label>\r\n    </div>\r\n    <div ng-show=\"open\">\r\n        <ul>\r\n            <li ng-repeat=\"file in dir.files\">\r\n                <a ng-click=\"c(session, file.pathFromProjectRoot)\">{{file.shortName}}</a>\r\n            </li>\r\n        </ul>\r\n    </div>\r\n</div>\r\n    ";
 org.jinjor.haxemine.client.view.Menu.template = "\r\n<nav id=\"menu\"/>{{session.connected.fds}}\r\n    <label ng-show=\"session.connected\"><!--{{session.projectRoot}}-->Haxemine</label>\r\n    <label ng-show=\"!session.connected\" class=\"disconnected\">Disconnected</label>\r\n</nav>\r\n    ";
-org.jinjor.haxemine.client.view.SearchPanel.template = "\r\n<div>\r\n    <form ng-submit=\"s(session, word)\" ng-disabled=\"session.searchWaiting\">\r\n        <input type=\"text\" ng-model=\"word\">\r\n        <input type=\"submit\" value=\"Search\">\r\n    </form>\r\n    <div>\r\n        <div><a ng-repeat=\"session.saerchResults\" ng-click=\"a(session, result)\">result.message</a></div>\r\n    </div>\r\n</div>\r\n    ";
-org.jinjor.haxemine.client.view.TaskListView.template = "\r\n<div id=\"task-list-view\"/>\r\n    <task session=\"session\" task=\"task\" ng-repeat=\"task in session.tasks\"/>\r\n</div>\r\n    ";
+org.jinjor.haxemine.client.view.SearchPanel.template = "\r\n<div>\r\n    <form ng-submit=\"s(session, word)\" ng-disabled=\"session.searchWaiting\">\r\n        <input type=\"text\" ng-model=\"word\">\r\n        <input type=\"submit\" value=\"Search\">\r\n    </form>\r\n    <div>\r\n        <div>\r\n            <a ng-repeat=\"result in session.searchResults\" ng-click=\"a(session, result)\">result.message</a>\r\n        </div>\r\n    </div>\r\n</div>\r\n    ";
+org.jinjor.haxemine.client.view.TaskListView.template = "\r\n<div id=\"task-list-view\"/>\r\n    <task session=\"session\" task=\"task\" ng-repeat=\"task in session.tasks\"></task>\r\n</div>\r\n    ";
 org.jinjor.haxemine.client.view.TaskView.template = "\r\n<div class=\"task-view {{c(session, task)}}\" title=\"{{task.content}}\" ng-click=\"cl(session, task)\">\r\n    {{task.name}}\r\n</div>\r\n    ";
-org.jinjor.haxemine.client.view.ViewPanel.template = "\r\n<div id=\"view_panel\"/>\r\n    <div id=\"tabsContainer\" >\r\n        <span class=\"view-tab selected('tasks')\" ng-click=\"t('tasks')\">Tasks</span>\r\n        <span class=\"view-tab selected('search')\" ng-click=\"t('search')\">Search</span>\r\n    </div>\r\n    <div id=\"panelsContainer\">\r\n        <div>\r\n            <tasklist session=\"session\"></tasklist>\r\n        </div>\r\n        <div>\r\n            <search session=\"session\"></search>\r\n        </div>\r\n    </div>\r\n</div>\r\n    ";
+org.jinjor.haxemine.client.view.ViewPanel.template = "\r\n<div id=\"view_panel\">\r\n    <div id=\"tabsContainer\" >\r\n        <span class=\"view-tab {{selected('tasks')}}\" ng-click=\"t('tasks')\">Tasks</span>\r\n        <span class=\"view-tab {{selected('search')}}\" ng-click=\"t('search')\">Search</span>\r\n    </div>\r\n    <div id=\"panelsContainer\">\r\n        <div ng-show=\"selected('tasks')\">\r\n            <tasklist session=\"session\"></tasklist>\r\n        </div>\r\n        <div ng-show=\"selected('search')\">\r\n            <search session=\"session\"></search>\r\n        </div>\r\n    </div>\r\n</div>\r\n    ";
 org.jinjor.haxemine.client.Main.main();
 
 //@ sourceMappingURL=haxemine.js.map

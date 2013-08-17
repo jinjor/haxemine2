@@ -15,13 +15,15 @@ class SearchPanel {
         <input type="submit" value="Search">
     </form>
     <div>
-        <div><a ng-repeat="session.saerchResults" ng-click="a(session, result)">result.message</a></div>
+        <div>
+            <a ng-repeat="result in session.searchResults" ng-click="a(session, result)">result.message</a>
+        </div>
     </div>
 </div>
     ';
     
     static function __init__(){
-        HaxemineModule.module.directive('search_panel', function(){
+        HaxemineModule.module.directive('search', function(){
             return {
                 restrict: 'E',
                 replace: true,
@@ -35,6 +37,7 @@ class SearchPanel {
                         session.selectNextFile(file, result.row);
                     };
                     scope.s = function(session : Session, word){
+                        trace(word);
                         session.search(word);
                     };
                 }

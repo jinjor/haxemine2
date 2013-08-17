@@ -11,7 +11,7 @@ class TaskListView {
     
     private static var template = '
 <div id="task-list-view"/>
-    <task session="session" task="task" ng-repeat="task in session.tasks"/>
+    <task session="session" task="task" ng-repeat="task in session.tasks"></task>
 </div>
     ';
     

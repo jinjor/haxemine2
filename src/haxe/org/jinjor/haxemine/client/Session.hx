@@ -57,7 +57,7 @@ class Session {
     public function new(socket:HaxemineSocket){
         saveM = new SaveM(socket);
         compileErrors = [];
-        searchResults = null;
+        searchResults = [];
         dirs = [];
         
         var that = this;
@@ -116,10 +116,6 @@ class Session {
                 task.reset();
             }
         });
-        this.onLastTaskProgressChanged.sub('CompileErrorPanel.new', function(_){
-        });
-        this.onAllFilesChanged.sub('FileSelector.new', function(_){
-        });
     }
     
     public function save(text) {
@@ -136,13 +132,10 @@ class Session {
     public function getCompileErrors() : Array<CompileError> {
         return if(lastTaskProgress != null) lastTaskProgress.compileErrors else [];
     }
-    
 
     private function setAllFiles(allFiles : Hash<SourceFile>){
         
         this.allFiles = allFiles;
-        
-        
         
         var dirsHash = new Hash<Dir>();
         var all = allFiles;
@@ -167,15 +160,11 @@ class Session {
         
         this.dirs = dirsArray;
         
-        
-        
         this.onAllFilesChanged.pub(null);
     }
     public function getAllFiles() : Hash<SourceFile>{
-        //untyped console.log(JSON.stringify(allFiles));
         return allFiles;
     }
-    
 
     public function getCurrentFile() : SourceFile {
         return editingFiles.getCursored();

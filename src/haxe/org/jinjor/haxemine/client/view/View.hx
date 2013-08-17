@@ -15,9 +15,11 @@ class View {
 <div>
     <menu session="session"></menu>
     <fileselector session="session"></fileselector>
-    <aceeditor session="session"></aceeditor>
-    <hr/>
-    <viewpanel session="session"></viewpanel>
+    <div id="right">
+        <aceeditor session="session"></aceeditor>
+        <hr/>
+        <viewpanel session="session"></viewpanel>
+    </div>
 </div>
         ';
         
