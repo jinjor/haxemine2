@@ -17,10 +17,10 @@ class ViewPanel {
     </div>
     <div id="panelsContainer">
         <div>
-            <tasklist></tasklist>
+            <tasklist session="session"></tasklist>
         </div>
         <div>
-            <search></search>
+            <search session="session"></search>
         </div>
     </div>
 </div>

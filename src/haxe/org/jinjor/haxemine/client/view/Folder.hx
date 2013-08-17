@@ -1,6 +1,6 @@
 package org.jinjor.haxemine.client.view;
 
-import js.JQuery;
+import org.jinjor.haxemine.messages.SourceFile;
 using Lambda;
 
 class Folder {
@@ -15,7 +15,7 @@ class Folder {
     <div ng-show="open">
         <ul>
             <li ng-repeat="file in files">
-                <a click="c(file)">{{file.name}}</a>
+                <a click="c(session, file)">{{file.name}}</a>
             </li>
         </ul>
     </div>
@@ -28,20 +28,16 @@ class Folder {
                 restrict: 'E',
                 replace: true,
                 scope: {
-                    socket: '='
                     session: '='
                 },
                 template: template,
                 link: function(scope, element, attrs) {
-                    session.onInitialInfoReceived.sub('TaskListView.new', function(info : InitialInfoDto) {
-                        scope.tasks = info.taskInfos.map(function(taskInfo) {
-                            return new TaskModel(taskInfo.taskName, taskInfo.content, taskInfo.auto, taskProgressM);
-                        });
-                        scope.$apply();
-                    });
                     scope.change = function(open){
                         scope.open = open;
-                    }
+                    };
+                    scope.a = function(session : Session, file : SourceFile){
+                        session.selectNextFile(file);
+                    };
                 }
             }
         });

@@ -4,6 +4,7 @@ import js.Lib;
 import org.jinjor.haxemine.messages.SourceFile;
 import org.jinjor.haxemine.messages.SaveFileDto;
 import org.jinjor.haxemine.messages.SaveM;
+import org.jinjor.haxemine.client.view.Folder;
 
 using StringTools;
 using Lambda;
@@ -13,18 +14,17 @@ class FileSelector {
     
     static var template = '
 <div id="all-haxe-files">
-    <label class="file_selector_dir" ng-click"d(name)">{{name}}</label>
-    <ul ng-repeat="dir in dirs()">
-        <li ng-repeat="file in files">
-            <a ng-click="c(file.pathFromProjectRoot)">{{file.shortName}}</a>
+    <label class="file_selector_dir" ng-click"d(session, name)">{{name}}</label>
+    <ul ng-repeat="dir in session.dirs">
+    {{dir.name}}{{log(dir.name)}}
+        <li ng-repeat="file in dir.files">
+            <a ng-click="c(session, file.pathFromProjectRoot)">{{file.shortName}}</a>
         </li>
     </ul>
 </div>
 ';
     
     static function __init__(){
-        
-        
         untyped console.log('FileSelector');
         untyped console.log(HaxemineModule.module);
         HaxemineModule.module.directive('fileselector', function(){
@@ -36,44 +36,18 @@ class FileSelector {
                 },
                 template: template,
                 link: function(scope, element, attrs) {
-                    /*
-                    
-                    var session : Session = scope.session;
-                    var saveM = new SaveM(scope.socket);
-                    session.onAllFilesChanged.sub('FileSelector.new', function(_){
-                        js.Lib.eval("scope.$apply()");
-                    });
-                    scope.dirs = function(){
-                        var dirsHash = new Hash<Dir>();
-                        var all : Hash<Dynamic> = session.getAllFiles();//
-                        for(name in all.keys()){
-                            var dirName = name.substring(0, name.lastIndexOf('/'));
-                            var f = all.get(name);
-                            if(dirsHash.exists(dirName)){
-                                dirsHash.get(dirName).files.push(f);
-                            }else{
-                                var dir = new Dir(dirName);
-                                dirsHash.set(dirName, dir);
-                                dir.files.push(f);
-                            }
-                        }
-                
-                        var dirsArray : Array<Dir> = dirsHash.map(function(dir){
-                            dir.files.sort(function(f1, f2){
-                                return f1.shortName.compareTo(f2.shortName);
-                            });
-                            return dir;
-                        }).array();
-                        dirsArray.sort(function(d1, d2){
-                            return d1.name.compareTo(d2.name);
-                        });
-                        return dirsArray;
+                    untyped console.log('0');
+                    scope.log = function(f){
+                        untyped console.log(f);
                     };
-                    scope.c = function(path){
+                    scope.c = function(session : Session, path){
+                        untyped console.log('2');
                         var file = session.getAllFiles().get(path);
                         session.selectNextFile(file, null);
                     }
-                    scope.d = function(path){
+                    scope.d = function(session : Session, path){
+                        untyped console.log('1');
+                        
                         var guessedPackage = path.replace('/', '.');
                         var classPath = js.Lib.window.prompt("create new class", guessedPackage + '.');
                         if(classPath != null){
@@ -92,12 +66,10 @@ class ${className} {
     }
 
 }';
-                                saveNewFile(saveM, session, path + '/' + className + '.hx', text);
+                                saveNewFile(session.saveM, session, path + '/' + className + '.hx', text);
                             }
                         }
                     };
-                    */
-                    
                 }
             }
         });
@@ -133,17 +105,6 @@ class ${className} {
       
 }
 
-private class Dir {
-    
-    public var name : String;
-    public var files : Array<SourceFile>;
-    
-    public function new(name){
-        this.name = name;
-        this.files = [];
-    }
-    
-    
-}
+
 
 

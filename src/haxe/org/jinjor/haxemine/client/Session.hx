@@ -18,6 +18,8 @@ import org.jinjor.haxemine.messages.TaskProgressM;
 
 import org.jinjor.haxemine.server.Mode;
 
+import org.jinjor.haxemine.client.view.Dir;//TODO
+
 
 using Lambda;
 using org.jinjor.util.Util;
@@ -26,7 +28,16 @@ import org.jinjor.util.Event2;
 
 class Session {
 
-    public var socket : HaxemineSocket;
+    var socket : HaxemineSocket;
+    var onSocketConnected : Event<Void>;
+    var onSocketDisconnected : Event<Void>;
+    var onInitialInfoReceived : Event<InitialInfoDto>;
+    var onAllFilesChanged : Event<Void>;
+    var onLastTaskProgressChanged : Event<Void>;
+    var onSave : Event<Void>;
+    var onSelectView : Event<String>;
+    var onEditingFileChange : Event2<SourceFile, Int>;
+    public var saveM : SaveM;//TODO
 
     public var editingFiles : HistoryArray<SourceFile>;
     public var allFiles : Hash<SourceFile>;
@@ -41,21 +52,13 @@ class Session {
     public var compileErrors : Array<CompileError>;
     public var searchResults : Array<Dynamic>;
     
-    private var onSocketConnected : Event<Void>;
-    private var onSocketDisconnected : Event<Void>;
-    private var onInitialInfoReceived : Event<InitialInfoDto>;
-    private var onAllFilesChanged : Event<Void>;
-    private var onLastTaskProgressChanged : Event<Void>;
-    private var onSave : Event<Void>;
-    private var onSelectView : Event<String>;
-    private var onEditingFileChange : Event2<SourceFile, Int>;
-    
-    var saveM : SaveM;
+    public var dirs :Array<Dir>;
     
     public function new(socket:HaxemineSocket){
         saveM = new SaveM(socket);
         compileErrors = [];
         searchResults = null;
+        dirs = [];
         
         var that = this;
         this.socket = socket;
@@ -103,7 +106,6 @@ class Session {
         this.onSocketConnected.sub('Session.new', function(_){
             doTasksM.pub(null);
         });
-        
         this.onInitialInfoReceived.sub('TaskListView.new', function(info : InitialInfoDto) {
             this.tasks = info.taskInfos.map(function(taskInfo) {
                 return new TaskModel(taskInfo.taskName, taskInfo.content, taskInfo.auto, taskProgressM);
@@ -113,7 +115,10 @@ class Session {
             for(task in tasks){
                 task.reset();
             }
-            js.Lib.eval('scope.$apply()');
+        });
+        this.onLastTaskProgressChanged.sub('CompileErrorPanel.new', function(_){
+        });
+        this.onAllFilesChanged.sub('FileSelector.new', function(_){
         });
     }
     
@@ -134,10 +139,40 @@ class Session {
     
 
     private function setAllFiles(allFiles : Hash<SourceFile>){
+        
         this.allFiles = allFiles;
+        
+        
+        
+        var dirsHash = new Hash<Dir>();
+        var all = allFiles;
+        
+        for(name in all.keys()){
+            var dirName = name.substring(0, name.lastIndexOf('/'));
+            var f = all.get(name);
+            if(dirsHash.exists(dirName)){
+                dirsHash.get(dirName).files.push(f);
+            }else{
+                var dir = new Dir(dirName);
+                dirsHash.set(dirName, dir);
+                dir.files.push(f);
+            }
+        }
+        var dirsArray : Array<Dir> = dirsHash.map(function(dir){
+            dir.files.sort(function(f1, f2){
+                return f1.shortName.compareTo(f2.shortName);
+            });
+            return dir;
+        }).array();
+        
+        this.dirs = dirsArray;
+        
+        
+        
         this.onAllFilesChanged.pub(null);
     }
     public function getAllFiles() : Hash<SourceFile>{
+        //untyped console.log(JSON.stringify(allFiles));
         return allFiles;
     }
     
@@ -145,7 +180,7 @@ class Session {
     public function getCurrentFile() : SourceFile {
         return editingFiles.getCursored();
     }
-    public function selectNextFile(file: SourceFile, optLine : Int) {
+    public function selectNextFile(file: SourceFile, ?optLine : Int) {
         if(file == null){
             return;
         }

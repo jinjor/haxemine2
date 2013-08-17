@@ -6,7 +6,7 @@ import org.jinjor.haxemine.messages.DoTaskM;
 class TaskView {
     
     private static var template = '
-<div class="task-view {{c(task)}}" title="{{task.content}}" ng-click="cl(task)">
+<div class="task-view {{c(session, task)}}" title="{{task.content}}" ng-click="cl(session, task)">
     {{task.name}}
 </div>
     ';
@@ -17,14 +17,12 @@ class TaskView {
                 restrict: 'E',
                 replace: true,
                 scope: {
+                    session: '=',
                     task: '='
                 },
                 template: template,
                 link: function(scope, element, attrs) {
-                    var session : Session = scope.session;
-                    var task : TaskModel = scope.task;
-                    
-                    scope.c = function(task : TaskModel) {
+                    scope.c = function(session : Session, task : TaskModel) {
                         return switch(task.state){
                             case NONE: '';
                             case WAITING: '';
@@ -33,7 +31,7 @@ class TaskView {
                             case READY : 'ready';
                         };
                     };
-                    scope.cl = function(task){
+                    scope.cl = function(session : Session, task : TaskModel){
                         if(task.state == TaskModelState.READY){
                             task.setState(TaskModelState.WAITING);
                             session.doTask(task.name);

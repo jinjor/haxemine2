@@ -14,7 +14,7 @@ class CompileErrorPanel {
     <div id="compile-errors">
         <ul>
             <li ng-repeat="error in session.getCompileErrors()">
-                <a ng-click="c(error)">{{error.originalMessage}}</a>
+                <a ng-click="c(session, error)">{{error.originalMessage}}</a>
             </li>
         </ul>
     </div>
@@ -27,16 +27,11 @@ class CompileErrorPanel {
                 restrict: 'E',
                 replace: true,
                 scope: {
-                    socket: '=',
                     session: '='
                 },
                 template: template,
                 link: function(scope, element, attrs) {
-                    var session = scope.session;
-                    scope.session.onLastTaskProgressChanged.sub('CompileErrorPanel.new', function(_){
-                        js.Lib.eval('scope.$apply()');
-                    });
-                    scope.c = function(error){
+                    scope.c = function(session : Session, error){
                         var file = session.getAllFiles().get(error.path);
                         var row = error.row;
                         session.selectNextFile(file, row);
