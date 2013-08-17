@@ -10,29 +10,26 @@ using Lambda;
 class AceEditorView {
     
     private static var template = '
-<div class="editor"/></div>
+<div id="editor" reset="reset(session)"/></div>
     ';
     
     static function __init__(){
-        HaxemineModule.module.directive('ace_editor', function(){
+        HaxemineModule.module.directive('aceeditor', function(){
             return {
                 restrict: 'E',
                 replace: true,
                 scope: {
-                    socket: '=',
                     session: '='
                 },
                 template: template,
                 link: function(scope, element, attrs) {
-                    var session : Session = scope.session;
+                    var editor : Dynamic = untyped ace.edit('editor');
+                    editor.setTheme("ace/theme/eclipse");
                     
-                    haxe.Timer.delay(function(){
-                        var editor : Dynamic = untyped ace.edit('editor');
-                        editor.setTheme("ace/theme/eclipse");
-                        session.onLastTaskProgressChanged.sub('AceEditorView.new', function(_){
-                            annotateCompileError(editor, session);
-                        });
-                        session.onInitialInfoReceived.sub('AceEditorView.new', function(info){
+                    var firstTime = true;
+                    scope.reset = function(session : Session){
+                        if(firstTime){
+                            
                             editor.commands.addCommands([{
                                 Name : "savefile",
                                 bindKey: {
@@ -87,21 +84,21 @@ class AceEditorView {
                                     session.selectNewerFile();
                                 }
                             }]);
+                            firstTime = false;
+                        }
                         
+                        annotateCompileError(editor, session);
+
+                        new FileDetailDao().getFile(session.editingFile.pathFromProjectRoot, function(detail: FileDetail){
+                            editor.getSession().setValue(detail.text);
+                            editor.getSession().setMode("ace/mode/" + detail.mode);
+                            annotateCompileError(editor, session);
+                            if(session.editingLine != null){
+                                editor.gotoLine(session.editingLine);
+                            }
                         });
-            
-                        session.onEditingFileChange.sub(function(file, line){
-                            new FileDetailDao().getFile(file.pathFromProjectRoot, function(detail: FileDetail){
-                                editor.getSession().setValue(detail.text);
-                                editor.getSession().setMode("ace/mode/" + detail.mode);
-                                annotateCompileError(editor, session);
-                                if(line != null){
-                                    editor.gotoLine(line);
-                                }
-                                
-                            });
-                        });
-                    }, 1000);
+                        
+                    }
                 }
             }
         });

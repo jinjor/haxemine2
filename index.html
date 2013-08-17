@@ -4,6 +4,9 @@
   <title>Haxemine</title>
   <script src="/socket.io/socket.io.js"></script>
   <script src="js/angular.min.js"></script>
+  <script>
+      angular.module('haxemine', []);
+  </script>
   
   <script src="js/ace.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/theme-eclipse.js" type="text/javascript" charset="utf-8"></script>
@@ -15,7 +18,7 @@
   <link rel="stylesheet" type="text/css" href="css/base.css">
   
 </head>
-<body ng-app>
+<body ng-app="haxemine">
     <haxemine/>
 </body>
 </html>

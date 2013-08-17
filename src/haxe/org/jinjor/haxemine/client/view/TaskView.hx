@@ -12,7 +12,7 @@ class TaskView {
     ';
     
     static function __init__(){
-        HaxemineModule.module.directive('task_view', function(){
+        HaxemineModule.module.directive('task', function(){
             return {
                 restrict: 'E',
                 replace: true,
@@ -23,10 +23,7 @@ class TaskView {
                 link: function(scope, element, attrs) {
                     var session : Session = scope.session;
                     var task : TaskModel = scope.task;
-                    session.onSave.sub('TaskView.new.${task.name}', function(_) {
-                        task.reset();
-                        js.Lib.eval('scope.$apply()');
-                    });
+                    
                     scope.c = function(task : TaskModel) {
                         return switch(task.state){
                             case NONE: '';

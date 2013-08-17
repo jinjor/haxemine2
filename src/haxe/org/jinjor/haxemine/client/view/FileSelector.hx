@@ -11,7 +11,7 @@ using org.jinjor.util.Util;
 
 class FileSelector {
     
-    private static var template = '
+    static var template = '
 <div id="all-haxe-files">
     <label class="file_selector_dir" ng-click"d(name)">{{name}}</label>
     <ul ng-repeat="dir in dirs()">
@@ -23,16 +23,21 @@ class FileSelector {
 ';
     
     static function __init__(){
-        HaxemineModule.module.directive('file_selector', function(){
+        
+        
+        untyped console.log('FileSelector');
+        untyped console.log(HaxemineModule.module);
+        HaxemineModule.module.directive('fileselector', function(){
             return {
                 restrict: 'E',
                 replace: true,
                 scope: {
-                    socket: '=',
                     session: '='
                 },
                 template: template,
                 link: function(scope, element, attrs) {
+                    /*
+                    
                     var session : Session = scope.session;
                     var saveM = new SaveM(scope.socket);
                     session.onAllFilesChanged.sub('FileSelector.new', function(_){
@@ -91,9 +96,12 @@ class ${className} {
                             }
                         }
                     };
+                    */
+                    
                 }
             }
         });
+        
     }
     
     private static function hasCompileError(session : Session, file : SourceFile) : Bool{

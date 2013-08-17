@@ -26,7 +26,7 @@ import org.jinjor.util.Event2;
 
 class Session {
 
-    var socket : Dynamic;
+    public var socket : HaxemineSocket;
 
     public var editingFiles : HistoryArray<SourceFile>;
     public var allFiles : Hash<SourceFile>;
@@ -34,22 +34,25 @@ class Session {
     public var lastTaskProgress : TaskProgress;
     public var tasks : Array<TaskModel>;
     public var langMode : Mode;
+    public var connected : Bool;
+    public var editingFile : SourceFile;
+    public var editingLine : Int;
     
     public var compileErrors : Array<CompileError>;
     public var searchResults : Array<Dynamic>;
     
-    public var onSocketConnected : Event<Void>;
-    public var onSocketDisconnected : Event<Void>;
-    public var onInitialInfoReceived : Event<InitialInfoDto>;
-    public var onAllFilesChanged : Event<Void>;
-    public var onLastTaskProgressChanged : Event<Void>;
-    public var onSave : Event<Void>;
-    public var onSelectView : Event<String>;
-    public var onEditingFileChange : Event2<SourceFile, Int>;
+    private var onSocketConnected : Event<Void>;
+    private var onSocketDisconnected : Event<Void>;
+    private var onInitialInfoReceived : Event<InitialInfoDto>;
+    private var onAllFilesChanged : Event<Void>;
+    private var onLastTaskProgressChanged : Event<Void>;
+    private var onSave : Event<Void>;
+    private var onSelectView : Event<String>;
+    private var onEditingFileChange : Event2<SourceFile, Int>;
     
     var saveM : SaveM;
     
-    public function new(socket){
+    public function new(socket:HaxemineSocket){
         saveM = new SaveM(socket);
         compileErrors = [];
         searchResults = null;
@@ -79,11 +82,11 @@ class Session {
         });
         socket.on('connect', function(_) {
             trace("connected.");//View
-            onSocketConnected.pub(null);
+            connected = true;
         });
         socket.on('disconnect', function(_){
             trace("disconnected.");//View
-            onSocketDisconnected.pub(null);
+            connected = false;
         });
         this.editingFiles = new HistoryArray<SourceFile>(10, SourceFile.equals);
         this.allFiles = new Hash();
@@ -105,6 +108,12 @@ class Session {
             this.tasks = info.taskInfos.map(function(taskInfo) {
                 return new TaskModel(taskInfo.taskName, taskInfo.content, taskInfo.auto, taskProgressM);
             }).array();
+        });
+        this.onSave.sub('TaskView.new.${task.name}', function(_) {
+            for(task in tasks){
+                task.reset();
+            }
+            js.Lib.eval('scope.$apply()');
         });
     }
     

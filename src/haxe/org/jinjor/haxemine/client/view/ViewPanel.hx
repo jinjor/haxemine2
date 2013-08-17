@@ -17,17 +17,17 @@ class ViewPanel {
     </div>
     <div id="panelsContainer">
         <div>
-            <task_list/>
+            <tasklist></tasklist>
         </div>
-        <div">
-            <search/>
+        <div>
+            <search></search>
         </div>
     </div>
 </div>
     ';
     
     static function __init__(){
-        HaxemineModule.module.directive('task_list_view', function(){
+        HaxemineModule.module.directive('viewpanel', function(){
             return {
                 restrict: 'E',
                 replace: true,

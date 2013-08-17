@@ -21,7 +21,7 @@ class SearchPanel {
     ';
     
     static function __init__(){
-        HaxemineModule.module.directive('file_selector', function(){
+        HaxemineModule.module.directive('search_panel', function(){
             return {
                 restrict: 'E',
                 replace: true,

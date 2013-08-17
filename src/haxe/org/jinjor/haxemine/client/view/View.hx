@@ -1,23 +1,27 @@
 package org.jinjor.haxemine.client.view;
 
 import org.jinjor.haxemine.client.HaxemineModule;
-import org.jinjor.haxemine.client.view.FileSelector;
+
 import org.jinjor.haxemine.client.view.AceEditorView;
 import org.jinjor.haxemine.client.view.ViewPanel;
+import org.jinjor.haxemine.client.view.Menu;
+import org.jinjor.haxemine.client.view.FileSelector;
 
 class View {
     
-    private static var template = '
-<div>
-    <menu/>
-    <file_selector/>
-    <ace_editor/>
-    <hr/>
-    <view_panel/>
-</div>
-    ';
-    
     static function __init__(){
+        
+        var template = '
+<div>
+    <menu session="session"></menu>
+    <fileselector session="session"></fileselector>
+    <aceeditor session="session"></aceeditor>
+    <hr/>
+    <viewpanel session="session"></viewpanel>
+</div>
+        ';
+        
+        untyped console.log("View");
         HaxemineModule.module.directive('haxemine', function(){
             return {
                 restrict: 'E',
@@ -27,7 +31,7 @@ class View {
                 link: function(scope, element, attrs) {
                     scope.ace = untyped ace;
                     scope.socket = untyped io.connect('/');
-                    scope.session = new Session(scope.socket);
+                    scope.session = new Session(new HaxemineSocket(scope.socket, scope));
                 }
             }
         });

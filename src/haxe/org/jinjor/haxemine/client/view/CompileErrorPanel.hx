@@ -10,7 +10,7 @@ class CompileErrorPanel {
 
     private static var template = '
 <div id="compile-error-panel"/>
-    <task_list_view/>
+    <tasklist session="session"></tasklist>
     <div id="compile-errors">
         <ul>
             <li ng-repeat="error in session.getCompileErrors()">
@@ -22,7 +22,7 @@ class CompileErrorPanel {
     ';
     
     static function __init__(){
-        HaxemineModule.module.directive('file_selector', function(){
+        HaxemineModule.module.directive('compileerror', function(){
             return {
                 restrict: 'E',
                 replace: true,
