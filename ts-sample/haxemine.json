@@ -1,0 +1,10 @@
+{
+ "port": 8763,
+ "mode": "typescript",
+ "commands": [
+  {
+   "command": "tsc --out app.js --module amd src/app.ts src/models.ts src/views.ts --sourcemap",
+   "auto": true
+  }
+ ]
+}

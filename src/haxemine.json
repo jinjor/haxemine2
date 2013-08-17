@@ -1,0 +1,13 @@
+{
+  "port": 8764,
+  "hxml": [
+    {
+      "path": "client.hxml",
+      "auto": true
+    },
+    {
+      "path": "server.hxml",
+      "auto": true
+    }
+  ]
+}
