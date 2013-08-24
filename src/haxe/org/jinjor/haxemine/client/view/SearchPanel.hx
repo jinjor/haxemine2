@@ -15,8 +15,8 @@ class SearchPanel {
         <input type="submit" value="Search">
     </form>
     <div>
-        <div>
-            <a ng-repeat="result in session.searchResults" ng-click="a(session, result)">result.message</a>
+        <div ng-repeat="result in session.searchResults">
+            <a ng-click="a(session, result)">{{result.message}}</a>
         </div>
     </div>
 </div>
@@ -37,7 +37,6 @@ class SearchPanel {
                         session.selectNextFile(file, result.row);
                     };
                     scope.s = function(session : Session, word){
-                        trace(word);
                         session.search(word);
                     };
                 }

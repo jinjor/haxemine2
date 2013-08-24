@@ -6,11 +6,7 @@ class FileSelector {
     
     static var template = '
 <div id="all-haxe-files">
-    <label class="file_selector_dir" ng-click"d(session, name)">{{name}}</label>
-    
-    <ul ng-repeat="dir in session.dirs">
-        <folder session="session" dir="dir"></folder>
-    </ul>
+        <folder session="session" dir="dir" ng-repeat="dir in session.dirs"></folder>
 </div>
 ';
     

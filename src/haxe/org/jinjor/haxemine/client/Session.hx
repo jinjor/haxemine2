@@ -8,6 +8,7 @@ import org.jinjor.haxemine.messages.FileDetail;
 import org.jinjor.haxemine.messages.SaveFileDto;
 import org.jinjor.haxemine.messages.InitialInfoDto;
 import org.jinjor.haxemine.messages.TaskProgress;
+import org.jinjor.haxemine.messages.SearchResult;
 
 import org.jinjor.haxemine.messages.SaveM;
 import org.jinjor.haxemine.messages.InitialInfoM;
@@ -15,10 +16,13 @@ import org.jinjor.haxemine.messages.AllHaxeFilesM;
 import org.jinjor.haxemine.messages.DoTaskM;
 import org.jinjor.haxemine.messages.DoTasksM;
 import org.jinjor.haxemine.messages.TaskProgressM;
+import org.jinjor.haxemine.messages.SearchM;
+import org.jinjor.haxemine.messages.SearchResultM;
 
 import org.jinjor.haxemine.server.Mode;
 
 import org.jinjor.haxemine.client.view.Dir;//TODO
+
 
 
 using Lambda;
@@ -33,10 +37,16 @@ class Session {
     var onSocketDisconnected : Event<Void>;
     var onInitialInfoReceived : Event<InitialInfoDto>;
     var onAllFilesChanged : Event<Void>;
-    var onLastTaskProgressChanged : Event<Void>;
+    public var onLastTaskProgressChanged : Event<Void>;
     var onSave : Event<Void>;
     var onSelectView : Event<String>;
-    var onEditingFileChange : Event2<SourceFile, Int>;
+    
+    public var onEditingFileChange : Event2<SourceFile, Int>;
+    public var currentFileDetail : FileDetail;
+    
+    public var doTaskM :DoTaskM;
+    public var taskProgressM : TaskProgressM;
+    public var searchM : SearchM;
     public var saveM : SaveM;//TODO
 
     public var editingFiles : HistoryArray<SourceFile>;
@@ -55,7 +65,7 @@ class Session {
     public var dirs :Array<Dir>;
     
     public function new(socket:HaxemineSocket){
-        saveM = new SaveM(socket);
+        
         compileErrors = [];
         searchResults = [];
         dirs = [];
@@ -65,7 +75,10 @@ class Session {
         var initialInfoM = new InitialInfoM(socket);
         var allHaxeFilesM = new AllHaxeFilesM(socket);
         var doTasksM = new DoTasksM(socket);
-        var taskProgressM = new TaskProgressM(socket);
+        saveM = new SaveM(socket);
+        doTaskM = new DoTaskM(socket);
+        taskProgressM = new TaskProgressM(socket);
+        searchM = new SearchM(socket.socket);
         
         socket.on('stdout', function(msg : Dynamic) {
             if(msg != ''){
@@ -116,6 +129,11 @@ class Session {
                 task.reset();
             }
         });
+        
+        var searchResultM = new SearchResultM(socket);
+        searchResultM.sub('SearchPanel.new', function(results : Array<SearchResult>){
+            this.searchResults = results;
+        });
     }
     
     public function save(text) {
@@ -123,8 +141,8 @@ class Session {
     }
     
     public function search(word) {
+        searchM.pub(word);
         this.searchResults = null;
-        this.searchResults = [];//TODO
     }
     public function doTask(word) {
     }
@@ -193,7 +211,7 @@ class Session {
         }
         return getCompileErrors().filter(function(error){
             return error.originalMessage.indexOf(file.pathFromProjectRoot) == 0
-            || error.originalMessage.indexOf('./' + file.pathFromProjectRoot) == 0;
+            || error.originalMessage.indexOf('./${file.pathFromProjectRoot}') == 0;
         });
     }
     

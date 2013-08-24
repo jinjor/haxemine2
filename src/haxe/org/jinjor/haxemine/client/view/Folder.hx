@@ -20,7 +20,7 @@ class Folder {
 <div class="folder"/>
     <div>
         <div ng-show="open" class="closeMark" ng-click="change(false)">-</div>
-        <div ng-show="!open" class="openMark" ng-click="change(true)">+</div>
+        <div ng-hide="open" class="openMark" ng-click="change(true)">+</div>
         <label class="file_selector_dir">{{dir.name}}</label>
     </div>
     <div ng-show="open">
@@ -50,7 +50,7 @@ class Folder {
                     };
                     scope.d = function(session : Session, path){
                         var guessedPackage = path.replace('/', '.');
-                        var classPath = js.Lib.window.prompt("create new class", guessedPackage + '.');
+                        var classPath = Lib.window.prompt("create new class", guessedPackage + '.');
                         if(classPath != null){
                             var splittedClass = classPath.split('.');
                             var className = splittedClass[splittedClass.length-1];
@@ -66,7 +66,7 @@ class ${className} {
         
     }
 }';
-                                saveNewFile(session.saveM, session, path + '/' + className + '.hx', text);
+                                saveNewFile(session.saveM, session, '$path/${className}.hx', text);
                             }
                         }
                     };

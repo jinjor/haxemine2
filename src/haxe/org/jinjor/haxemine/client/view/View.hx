@@ -28,7 +28,6 @@ class View {
             return {
                 restrict: 'E',
                 replace: true,
-                scope: true,
                 template: template,
                 link: function(scope, element, attrs) {
                     scope.ace = untyped ace;
