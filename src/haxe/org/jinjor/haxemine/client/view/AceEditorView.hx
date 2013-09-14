@@ -130,7 +130,7 @@ class AceEditorView {
     private static function annotateCompileError(editor, session : Session) {
         var annotations = session.getCompileErrorsByFile(session.getCurrentFile()).map(function(error){
             return {row:error.row-1, text: error.message, type:"error"};
-        }).array();
+        });
         editor.getSession().setAnnotations(annotations);
     }
 

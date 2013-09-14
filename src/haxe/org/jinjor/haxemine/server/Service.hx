@@ -32,7 +32,7 @@ class Service {
     }
     
     public static function save(mode: Mode, projectRoot : String, data, allHaxeFilesM : AllHaxeFilesM, socket:Dynamic){
-        var _path = projectRoot + '/'+ data.fileName;
+        var _path = '$projectRoot/${data.fileName}';
         var isNew = !path.existsSync(_path);
         saveToSrc(fs, _path, data.text);
         if(isNew){
@@ -53,7 +53,7 @@ class Service {
         }).map(function(hxml){
             var task = createCompileHaxeTask(socket, taskProgressM, projectRoot, hxml.path);
             return task;
-        }).array();
+        });
         async.series(tasks, function(){});
     }
           
@@ -64,14 +64,14 @@ class Service {
             }).map(function(command){
                 var task = createCompileTypeScriptTask(socket, taskProgressM, projectRoot, 'typescript_beta', command.command);
                 return task;
-            }).array();
+            });
         }else{
             conf.hxml.filter(function(hxml){
                 return hxml.auto != null && hxml.auto;
             }).map(function(hxml){
                 var task = createCompileHaxeTask(socket, taskProgressM, projectRoot, hxml.path);
                 return task;
-            }).array();
+            });
         }
 
         //tasks.push(createRunJasmineTask());
@@ -82,7 +82,7 @@ class Service {
         if(!OS.isWin()){
             throw 'search unsupported .';
         }else{
-            var command = 'findstr /N /S ' + word + ' *' + getPostfix(mode);
+            var command = 'findstr /N /S $word *${getPostfix(mode)}';
             Console.print(command);
             childProcess.exec(command, function(err, stdout:String, stderr){
                 if(err != null){
@@ -96,7 +96,7 @@ class Service {
                         var fileName = message.split(':')[0].replace('\\', '/');
                         var row = Std.parseInt(message.split(':')[1]);
                         return new SearchResult(fileName, row, message);
-                    }).array();
+                    });
                     cb(null, results);
                 }
             });
@@ -130,17 +130,17 @@ class Service {
       compile(Mode.TypeScript, socket, taskProgressM, projectRoot, name, command, callBack);//TODO
     }
     private static function compileHaxe(socket, taskProgressM : TaskProgressM, projectRoot : String, hxmlPath, callBack){
-      compile(Mode.Haxe, socket, taskProgressM, projectRoot, hxmlPath, 'haxe ' + hxmlPath, callBack);
+      compile(Mode.Haxe, socket, taskProgressM, projectRoot, hxmlPath, 'haxe $hxmlPath', callBack);
     }
     
     private static function compile(mode:Mode, socket, taskProgressM : TaskProgressM, projectRoot : String, taskName, command, callBack){
-      Console.print('cwt:' + projectRoot);
+      Console.print('cwt:$projectRoot');
       childProcess.exec(command, {
         cwd: projectRoot
       },function(err, stdout, stderr){
           if(err != null){
              Console.print(stderr, command);
-             Console.print(''+err, 'err');
+             Console.print('$err', 'err');
              Console.print(stdout, 'stdout');
           }
         socket.emit('stdout', stdout);
@@ -156,7 +156,7 @@ class Service {
                     message = message.substring('./'.length);
                 }
                 return new CompileError(message, mode);
-            }).array();
+            });
             compileErrors;
         }else{
             [];

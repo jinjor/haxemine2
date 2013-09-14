@@ -54,8 +54,8 @@ class Main {
     
     static function startApp(projectRoot : String, conf : HaxemineConfig){
         
-        Console.print('projectRoot:' + projectRoot);
-        Console.print('port:' + conf.port);
+        Console.print('projectRoot: $projectRoot');
+        Console.print('port: $conf.port');
         
         var mode = if(conf.mode == 'typescript') Mode.TypeScript else Mode.Haxe;
         
@@ -69,10 +69,10 @@ class Main {
         } else {//haxe
             conf.hxml.map(function(hxml){
                 var name = hxml.path;
-                var content = fs.readFileSync(projectRoot + '/' + hxml.path, 'utf8');
+                var content = fs.readFileSync('$projectRoot/${hxml.path}', 'utf8');
                 
                 return new TaskInfo(name, content, if(hxml.auto == null) true else hxml.auto);
-            }).array();
+            });
         }
         
         var _path = path;
@@ -103,12 +103,12 @@ class Main {
           }else{
             res.contentType('application/json');
             trace(req.query.fileName);
-            res.send(Json.stringify(Service.findFromSrc(projectRoot + '/' + fileName)));
+            res.send(Json.stringify(Service.findFromSrc('$projectRoot/$fileName')));
           }
         });
         var server : Dynamic = http.createServer(app);
         server.listen(app.get('port'), function(){
-          Console.print("haxemine listening on port " + app.get('port'));
+          Console.print('haxemine listening on port ${app.get("port")}');
         });
         
         

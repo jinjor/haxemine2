@@ -1103,7 +1103,7 @@ org.jinjor.haxemine.client.HaxemineSocket = function(socket,scope) {
 	this.on = function(key,f) {
 		socket.on(key,function(data) {
 			f(data);
-			console.log("receive:" + key);
+			console.log("receive: " + key);
 			eval("scope.$" + "apply()");
 		});
 	};
@@ -1318,7 +1318,7 @@ org.jinjor.haxemine.server.Console = function() { }
 $hxClasses["org.jinjor.haxemine.server.Console"] = org.jinjor.haxemine.server.Console;
 org.jinjor.haxemine.server.Console.__name__ = ["org","jinjor","haxemine","server","Console"];
 org.jinjor.haxemine.server.Console.print = function(s,author) {
-	console.log((author || "haxemine") + " > " + s);
+	console.log("" + (author || "haxemine") + " > " + s);
 }
 org.jinjor.haxemine.server.FileUtil = function() {
 };
@@ -1403,9 +1403,9 @@ org.jinjor.haxemine.server.HaxemineConfigDao.prototype = {
 				files.sort(function(f1,f2) {
 					return StringTools.startsWith(f1,"build") && StringTools.startsWith(f2,"compile")?1:-1;
 				});
-				var xhml = Lambda.array(files.map(function(file) {
+				var xhml = files.map(function(file) {
 					return { path : file, auto : true};
-				}));
+				});
 				var conf = new org.jinjor.haxemine.server.HaxemineConfig(8765,"haxe",xhml,[]);
 				var confJson = JSON.stringify(conf,null," ");
 				org.jinjor.haxemine.server.HaxemineConfigDao.fs.writeFileSync(confPath,confJson,"utf8");
@@ -1454,18 +1454,18 @@ org.jinjor.haxemine.server.Main.main = function() {
 	} else org.jinjor.haxemine.server.Main.startApp(projectRoot,conf);
 }
 org.jinjor.haxemine.server.Main.startApp = function(projectRoot,conf) {
-	org.jinjor.haxemine.server.Console.print("projectRoot:" + projectRoot);
-	org.jinjor.haxemine.server.Console.print("port:" + conf.port);
+	org.jinjor.haxemine.server.Console.print("projectRoot: " + projectRoot);
+	org.jinjor.haxemine.server.Console.print("port: " + Std.string(conf) + ".port");
 	var mode = conf.mode == "typescript"?org.jinjor.haxemine.server.Mode.TypeScript:org.jinjor.haxemine.server.Mode.Haxe;
 	var taskInfos = conf.mode == "typescript"?Lambda.array(conf.commands.map(function(command) {
 		var name = "typescript_beta";
 		var content = command.command;
 		return new org.jinjor.haxemine.messages.TaskInfo(name,content,command.auto == null?true:command.auto);
-	})):Lambda.array(conf.hxml.map(function(hxml) {
+	})):conf.hxml.map(function(hxml) {
 		var name = hxml.path;
-		var content = org.jinjor.haxemine.server.Main.fs.readFileSync(projectRoot + "/" + hxml.path,"utf8");
+		var content = org.jinjor.haxemine.server.Main.fs.readFileSync("" + projectRoot + "/" + hxml.path,"utf8");
 		return new org.jinjor.haxemine.messages.TaskInfo(name,content,hxml.auto == null?true:hxml.auto);
-	}));
+	});
 	var _path = org.jinjor.haxemine.server.Main.path;
 	var _express = org.jinjor.haxemine.server.Main.express;
 	var app = org.jinjor.haxemine.server.Main.express();
@@ -1489,7 +1489,7 @@ org.jinjor.haxemine.server.Main.startApp = function(projectRoot,conf) {
 		if(fileName == null) res.send(); else {
 			res.contentType("application/json");
 			console.log(req.query.fileName);
-			res.send(js.Node.stringify(org.jinjor.haxemine.server.Service.findFromSrc(projectRoot + "/" + fileName),null,null));
+			res.send(js.Node.stringify(org.jinjor.haxemine.server.Service.findFromSrc("" + projectRoot + "/" + fileName),null,null));
 		}
 	});
 	var server = org.jinjor.haxemine.server.Main.http.createServer(app);
@@ -1573,7 +1573,7 @@ org.jinjor.haxemine.server.Service.getPostfix = function(mode) {
 	}(this));
 }
 org.jinjor.haxemine.server.Service.save = function(mode,projectRoot,data,allHaxeFilesM,socket) {
-	var _path = projectRoot + "/" + data.fileName;
+	var _path = "" + projectRoot + "/" + data.fileName;
 	var isNew = !org.jinjor.haxemine.server.Service.path.existsSync(_path);
 	org.jinjor.haxemine.server.Service.saveToSrc(org.jinjor.haxemine.server.Service.fs,_path,data.text);
 	if(isNew) org.jinjor.haxemine.server.Service.getAllFiles(projectRoot,mode,function(err,files) {
@@ -1586,27 +1586,27 @@ org.jinjor.haxemine.server.Service.save = function(mode,projectRoot,data,allHaxe
 	socket.emit("stdout","saved");
 }
 org.jinjor.haxemine.server.Service.doTask = function(conf,projectRoot,socket,taskProgressM,taskName) {
-	var tasks = Lambda.array(conf.hxml.filter(function(hxml) {
+	var tasks = conf.hxml.filter(function(hxml) {
 		return hxml.path == taskName;
 	}).map(function(hxml) {
 		var task = org.jinjor.haxemine.server.Service.createCompileHaxeTask(socket,taskProgressM,projectRoot,hxml.path);
 		return task;
-	}));
+	});
 	org.jinjor.haxemine.server.Service.async.series(tasks,function() {
 	});
 }
 org.jinjor.haxemine.server.Service.doAutoTasks = function(conf,projectRoot,socket,taskProgressM) {
-	var tasks = conf.mode == "typescript"?Lambda.array(conf.commands.filter(function(command) {
+	var tasks = conf.mode == "typescript"?conf.commands.filter(function(command) {
 		return command.auto != null && command.auto;
 	}).map(function(command) {
 		var task = org.jinjor.haxemine.server.Service.createCompileTypeScriptTask(socket,taskProgressM,projectRoot,"typescript_beta",command.command);
 		return task;
-	})):Lambda.array(conf.hxml.filter(function(hxml) {
+	}):conf.hxml.filter(function(hxml) {
 		return hxml.auto != null && hxml.auto;
 	}).map(function(hxml) {
 		var task = org.jinjor.haxemine.server.Service.createCompileHaxeTask(socket,taskProgressM,projectRoot,hxml.path);
 		return task;
-	}));
+	});
 	org.jinjor.haxemine.server.Service.async.series(tasks,function() {
 	});
 }
@@ -1617,14 +1617,14 @@ org.jinjor.haxemine.server.Service.searchWord = function(word,mode,cb) {
 		org.jinjor.haxemine.server.Service.childProcess.exec(command,function(err,stdout,stderr) {
 			if(err != null) cb(null,[]); else {
 				var messages = stdout.split("\n");
-				var results = Lambda.array(messages.filter(function(message) {
+				var results = messages.filter(function(message) {
 					return message != "";
 				}).map(function(message) {
 					console.log(message);
 					var fileName = StringTools.replace(message.split(":")[0],"\\","/");
 					var row = Std.parseInt(message.split(":")[1]);
 					return new org.jinjor.haxemine.messages.SearchResult(fileName,row,message);
-				}));
+				});
 				cb(null,results);
 			}
 		});
@@ -1666,12 +1666,12 @@ org.jinjor.haxemine.server.Service.compile = function(mode,socket,taskProgressM,
 			var $r;
 			var msg = stderr;
 			var messages = msg.split("\n");
-			var compileErrors1 = Lambda.array(messages.filter(function(message) {
+			var compileErrors1 = messages.filter(function(message) {
 				return message != "";
 			}).map(function(message) {
 				if(StringTools.startsWith(message,"./")) message = message.substring("./".length);
 				return new org.jinjor.haxemine.messages.CompileError(message,mode);
-			}));
+			});
 			$r = compileErrors1;
 			return $r;
 		}(this)):[];

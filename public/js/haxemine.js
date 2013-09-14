@@ -1083,7 +1083,7 @@ org.jinjor.haxemine.client.HaxemineSocket = function(socket,scope) {
 	this.on = function(key,f) {
 		socket.on(key,function(data) {
 			f(data);
-			console.log("receive:" + key);
+			console.log("receive: " + key);
 			eval("scope.$" + "apply()");
 		});
 	};
@@ -1149,9 +1149,9 @@ org.jinjor.haxemine.client.Session = function(socket) {
 		doTasksM.pub(null);
 	});
 	onInitialInfoReceived.sub("TaskListView.new",function(info) {
-		_g.tasks = Lambda.array(info.taskInfos.map(function(taskInfo) {
+		_g.tasks = info.taskInfos.map(function(taskInfo) {
 			return new org.jinjor.haxemine.client.TaskModel(taskInfo.taskName,taskInfo.content,taskInfo.auto,_g.taskProgressM);
-		}));
+		});
 	});
 	onSave.sub("Session.new",function(_) {
 		var _g1 = 0, _g2 = _g.tasks;
@@ -1342,9 +1342,9 @@ org.jinjor.haxemine.client.view.AceEditorView.link = function(scope,element,attr
 	};
 }
 org.jinjor.haxemine.client.view.AceEditorView.annotateCompileError = function(editor,session) {
-	var annotations = Lambda.array(session.getCompileErrorsByFile(session.getCurrentFile()).map(function(error) {
+	var annotations = session.getCompileErrorsByFile(session.getCurrentFile()).map(function(error) {
 		return { row : error.row - 1, text : error.message, type : "error"};
-	}));
+	});
 	editor.getSession().setAnnotations(annotations);
 }
 org.jinjor.haxemine.client.view.CompileErrorPanel = function() { }
@@ -1400,7 +1400,7 @@ org.jinjor.haxemine.client.view.Folder.saveNewFile = function(saveM,session,path
 			break;
 		}
 	}
-	if(dup) js.Lib.alert(pathFromProjectRoot + " already exists."); else saveM.pub(new org.jinjor.haxemine.messages.SaveFileDto(pathFromProjectRoot,text));
+	if(dup) js.Lib.alert("" + pathFromProjectRoot + " already exists."); else saveM.pub(new org.jinjor.haxemine.messages.SaveFileDto(pathFromProjectRoot,text));
 }
 org.jinjor.haxemine.client.view.Menu = function() { }
 $hxClasses["org.jinjor.haxemine.client.view.Menu"] = org.jinjor.haxemine.client.view.Menu;

@@ -119,7 +119,7 @@ class Session {
         onInitialInfoReceived.sub('TaskListView.new', function(info : InitialInfoDto) {
             this.tasks = info.taskInfos.map(function(taskInfo) {
                 return new TaskModel(taskInfo.taskName, taskInfo.content, taskInfo.auto, taskProgressM);
-            }).array();
+            });
         });
         onSave.sub('Session.new', function(_) {
             for(task in tasks){

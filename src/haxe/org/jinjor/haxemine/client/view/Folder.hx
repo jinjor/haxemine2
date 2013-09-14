@@ -104,7 +104,7 @@ class ${className} {
             }
         }
         if(dup){
-            Lib.alert(pathFromProjectRoot + ' already exists.');
+            Lib.alert('$pathFromProjectRoot already exists.');
         }else{
             saveM.pub(new SaveFileDto(pathFromProjectRoot, text));
         }

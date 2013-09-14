@@ -63,7 +63,7 @@ class HaxemineConfigDao {
                     });
                     var xhml = files.map(function(file){
                         return {path: file, auto: true};
-                    }).array();
+                    });
                     var conf = new HaxemineConfig(8765, 'haxe', xhml, []);//TODO typescript
                     var confJson = untyped JSON.stringify(conf, null, " ");
                     fs.writeFileSync(confPath, confJson, "utf8");
