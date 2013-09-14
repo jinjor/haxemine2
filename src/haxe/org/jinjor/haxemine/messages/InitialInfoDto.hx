@@ -6,7 +6,7 @@ class InitialInfoDto {
         
     public var mode: Mode;
     public var projectRoot : String;
-    public var allFiles : Hash<SourceFile>;
+    public var allFiles : Map<String, SourceFile>;
     public var taskInfos : Array<TaskInfo>;
     public var searchEnabled : Bool;
 

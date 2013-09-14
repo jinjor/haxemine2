@@ -2,6 +2,7 @@ package org.jinjor.haxemine.client.view;
 
 import org.jinjor.haxemine.messages.SourceFile;
 import js.Lib;
+import js.Browser;
 
 import org.jinjor.haxemine.messages.SourceFile;
 import org.jinjor.haxemine.messages.SaveFileDto;
@@ -17,7 +18,7 @@ using Lambda;
 class Folder {
     
     private static var template = '
-<div class="folder"/>
+<div class="folder">
     <div>
         <div ng-show="open" class="closeMark" ng-click="change(false)">-</div>
         <div ng-hide="open" class="openMark" ng-click="change(true)">+</div>
@@ -50,7 +51,7 @@ class Folder {
                     };
                     scope.d = function(session : Session, path){
                         var guessedPackage = path.replace('/', '.');
-                        var classPath = Lib.window.prompt("create new class", guessedPackage + '.');
+                        var classPath = Browser.window.prompt("create new class", guessedPackage + '.');
                         if(classPath != null){
                             var splittedClass = classPath.split('.');
                             var className = splittedClass[splittedClass.length-1];

@@ -23,8 +23,6 @@ import org.jinjor.haxemine.server.Mode;
 
 import org.jinjor.haxemine.client.view.Dir;//TODO
 
-
-
 using Lambda;
 using org.jinjor.util.Util;
 import org.jinjor.util.Event;
@@ -33,12 +31,9 @@ import org.jinjor.util.Event2;
 class Session {
 
     var socket : HaxemineSocket;
-    var onSocketConnected : Event<Void>;
-    var onSocketDisconnected : Event<Void>;
-    var onInitialInfoReceived : Event<InitialInfoDto>;
-    var onAllFilesChanged : Event<Void>;
-    public var onLastTaskProgressChanged : Event<Void>;
-    var onSave : Event<Void>;
+    var onSocketDisconnected : Event<Dynamic>;
+    var onAllFilesChanged : Event<Dynamic>;
+    public var onLastTaskProgressChanged : Event<Dynamic>;
     var onSelectView : Event<String>;
     
     public var onEditingFileChange : Event2<SourceFile, Int>;
@@ -50,7 +45,7 @@ class Session {
     public var saveM : SaveM;//TODO
 
     public var editingFiles : HistoryArray<SourceFile>;
-    public var allFiles : Hash<SourceFile>;
+    public var allFiles : Map<String, SourceFile>;
     public var fileToLoad : SourceFile;
     public var lastTaskProgress : TaskProgress;
     public var tasks : Array<TaskModel>;
@@ -78,7 +73,7 @@ class Session {
         saveM = new SaveM(socket);
         doTaskM = new DoTaskM(socket);
         taskProgressM = new TaskProgressM(socket);
-        searchM = new SearchM(socket.socket);
+        searchM = new SearchM(socket);
         
         socket.on('stdout', function(msg : Dynamic) {
             if(msg != ''){
@@ -88,6 +83,8 @@ class Session {
         allHaxeFilesM.sub('Session.new', function(files) {
             setAllFiles(files);
         });
+        
+        var onInitialInfoReceived = new Event();
         initialInfoM.sub('Session.new', function(initialInfo) {
             onInitialInfoReceived.pub(initialInfo);
             setAllFiles(initialInfo.allFiles);
@@ -105,26 +102,26 @@ class Session {
             connected = false;
         });
         this.editingFiles = new HistoryArray<SourceFile>(10, SourceFile.equals);
-        this.allFiles = new Hash();
+        this.allFiles = new Map();
         
-        this.onSocketConnected = new Event();
+        var onSocketConnected = new Event();
         this.onSocketDisconnected = new Event();
-        this.onInitialInfoReceived = new Event();
+        
         this.onAllFilesChanged = new Event();
         this.onLastTaskProgressChanged = new Event();
-        this.onSave = new Event();
+        var onSave = new Event();
         this.onSelectView = new Event();
         this.onEditingFileChange = new Event2();
         
-        this.onSocketConnected.sub('Session.new', function(_){
+        onSocketConnected.sub('Session.new', function(_){
             doTasksM.pub(null);
         });
-        this.onInitialInfoReceived.sub('TaskListView.new', function(info : InitialInfoDto) {
+        onInitialInfoReceived.sub('TaskListView.new', function(info : InitialInfoDto) {
             this.tasks = info.taskInfos.map(function(taskInfo) {
                 return new TaskModel(taskInfo.taskName, taskInfo.content, taskInfo.auto, taskProgressM);
             }).array();
         });
-        this.onSave.sub('TaskView.new.${task.name}', function(_) {
+        onSave.sub('Session.new', function(_) {
             for(task in tasks){
                 task.reset();
             }
@@ -151,11 +148,11 @@ class Session {
         return if(lastTaskProgress != null) lastTaskProgress.compileErrors else [];
     }
 
-    private function setAllFiles(allFiles : Hash<SourceFile>){
+    private function setAllFiles(allFiles : Map<String, SourceFile>){
         
         this.allFiles = allFiles;
         
-        var dirsHash = new Hash<Dir>();
+        var dirsHash = new Map<String, Dir>();
         var all = allFiles;
         
         for(name in all.keys()){
@@ -180,7 +177,7 @@ class Session {
         
         this.onAllFilesChanged.pub(null);
     }
-    public function getAllFiles() : Hash<SourceFile>{
+    public function getAllFiles() : Map<String, SourceFile>{
         return allFiles;
     }
 
@@ -205,9 +202,9 @@ class Session {
         }
     }
 
-    public function getCompileErrorsByFile(file : SourceFile) : List<CompileError> {
+    public function getCompileErrorsByFile(file : SourceFile) : Array<CompileError> {
         if(file == null){
-            return new List();
+            return new Array();
         }
         return getCompileErrors().filter(function(error){
             return error.originalMessage.indexOf(file.pathFromProjectRoot) == 0

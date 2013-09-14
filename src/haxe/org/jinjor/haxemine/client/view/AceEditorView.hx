@@ -59,7 +59,7 @@ class AceEditorView {
                         win : "Ctrl-S",
                         mac : "Command-S"
                     },
-                    exec: function(editor) {
+                    exec: function(editor : Dynamic) {
                         session.save(editor.getSession().getValue());
                     }
                 },{//TODO Ctrl-Click
@@ -68,7 +68,7 @@ class AceEditorView {
                         win : "Ctrl-Q",
                         mac : "Command-Q"
                     },
-                    exec: function(editor) {
+                    exec: function(editor : Dynamic) {
                         var pos = editor.getCursorPosition();
                         var value : String = editor.getSession().getTokenAt(pos.row,pos.column).value;
                         var charCode = value.charCodeAt(0);
@@ -92,18 +92,18 @@ class AceEditorView {
                     }
                 },{
                     Name : "toOlder",
-                    bindKey: {
+                    bindKey: untyped {
                         win : "Alt-Left"
                     },
-                    exec: function(editor) {
+                    exec: function(editor : Dynamic) {
                         session.selectOlderFile();
                     }
                 },{
                     Name : "toNewer",
-                    bindKey: {
+                    bindKey: untyped {
                         win : "Alt-Right"
                     },
-                    exec: function(editor) {
+                    exec: function(editor : Dynamic) {
                         session.selectNewerFile();
                     }
                 }]);

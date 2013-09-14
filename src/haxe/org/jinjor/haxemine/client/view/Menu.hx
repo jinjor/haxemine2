@@ -4,8 +4,8 @@ import org.jinjor.haxemine.messages.InitialInfoDto;
 
 class Menu {
     
-        private static var template = '
-<nav id="menu"/>{{session.connected.fds}}
+    private static var template = '
+<nav id="menu">{{session.connected.fds}}
     <label ng-show="session.connected"><!--{{session.projectRoot}}-->Haxemine</label>
     <label ng-show="!session.connected" class="disconnected">Disconnected</label>
 </nav>

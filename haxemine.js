@@ -3,6 +3,7 @@ var $hxClasses = {},$estr = function() { return js.Boot.__string_rec(this,''); }
 function $extend(from, fields) {
 	function inherit() {}; inherit.prototype = from; var proto = new inherit();
 	for (var name in fields) proto[name] = fields[name];
+	if( fields.toString !== Object.prototype.toString ) proto.toString = fields.toString;
 	return proto;
 }
 var EReg = function(r,opt) {
@@ -12,38 +13,7 @@ var EReg = function(r,opt) {
 $hxClasses["EReg"] = EReg;
 EReg.__name__ = ["EReg"];
 EReg.prototype = {
-	customReplace: function(s,f) {
-		var buf = new StringBuf();
-		while(true) {
-			if(!this.match(s)) break;
-			buf.b += Std.string(this.matchedLeft());
-			buf.b += Std.string(f(this));
-			s = this.matchedRight();
-		}
-		buf.b += Std.string(s);
-		return buf.b;
-	}
-	,replace: function(s,by) {
-		return s.replace(this.r,by);
-	}
-	,split: function(s) {
-		var d = "#__delim__#";
-		return s.replace(this.r,d).split(d);
-	}
-	,matchedPos: function() {
-		if(this.r.m == null) throw "No string matched";
-		return { pos : this.r.m.index, len : this.r.m[0].length};
-	}
-	,matchedRight: function() {
-		if(this.r.m == null) throw "No string matched";
-		var sz = this.r.m.index + this.r.m[0].length;
-		return this.r.s.substr(sz,this.r.s.length - sz);
-	}
-	,matchedLeft: function() {
-		if(this.r.m == null) throw "No string matched";
-		return this.r.s.substr(0,this.r.m.index);
-	}
-	,matched: function(n) {
+	matched: function(n) {
 		return this.r.m != null && n >= 0 && n < this.r.m.length?this.r.m[n]:(function($this) {
 			var $r;
 			throw "EReg::matched";
@@ -56,61 +26,7 @@ EReg.prototype = {
 		this.r.s = s;
 		return this.r.m != null;
 	}
-	,r: null
 	,__class__: EReg
-}
-var Hash = function() {
-	this.h = { };
-};
-$hxClasses["Hash"] = Hash;
-Hash.__name__ = ["Hash"];
-Hash.prototype = {
-	toString: function() {
-		var s = new StringBuf();
-		s.b += Std.string("{");
-		var it = this.keys();
-		while( it.hasNext() ) {
-			var i = it.next();
-			s.b += Std.string(i);
-			s.b += Std.string(" => ");
-			s.b += Std.string(Std.string(this.get(i)));
-			if(it.hasNext()) s.b += Std.string(", ");
-		}
-		s.b += Std.string("}");
-		return s.b;
-	}
-	,iterator: function() {
-		return { ref : this.h, it : this.keys(), hasNext : function() {
-			return this.it.hasNext();
-		}, next : function() {
-			var i = this.it.next();
-			return this.ref["$" + i];
-		}};
-	}
-	,keys: function() {
-		var a = [];
-		for( var key in this.h ) {
-		if(this.h.hasOwnProperty(key)) a.push(key.substr(1));
-		}
-		return HxOverrides.iter(a);
-	}
-	,remove: function(key) {
-		key = "$" + key;
-		if(!this.h.hasOwnProperty(key)) return false;
-		delete(this.h[key]);
-		return true;
-	}
-	,exists: function(key) {
-		return this.h.hasOwnProperty("$" + key);
-	}
-	,get: function(key) {
-		return this.h["$" + key];
-	}
-	,set: function(key,value) {
-		this.h["$" + key] = value;
-	}
-	,h: null
-	,__class__: Hash
 }
 var HxOverrides = function() { }
 $hxClasses["HxOverrides"] = HxOverrides;
@@ -159,93 +75,12 @@ HxOverrides.substr = function(s,pos,len) {
 	} else if(len < 0) len = s.length + len - pos;
 	return s.substr(pos,len);
 }
-HxOverrides.remove = function(a,obj) {
-	var i = 0;
-	var l = a.length;
-	while(i < l) {
-		if(a[i] == obj) {
-			a.splice(i,1);
-			return true;
-		}
-		i++;
-	}
-	return false;
-}
 HxOverrides.iter = function(a) {
 	return { cur : 0, arr : a, hasNext : function() {
 		return this.cur < this.arr.length;
 	}, next : function() {
 		return this.arr[this.cur++];
 	}};
-}
-var IntHash = function() {
-	this.h = { };
-};
-$hxClasses["IntHash"] = IntHash;
-IntHash.__name__ = ["IntHash"];
-IntHash.prototype = {
-	toString: function() {
-		var s = new StringBuf();
-		s.b += Std.string("{");
-		var it = this.keys();
-		while( it.hasNext() ) {
-			var i = it.next();
-			s.b += Std.string(i);
-			s.b += Std.string(" => ");
-			s.b += Std.string(Std.string(this.get(i)));
-			if(it.hasNext()) s.b += Std.string(", ");
-		}
-		s.b += Std.string("}");
-		return s.b;
-	}
-	,iterator: function() {
-		return { ref : this.h, it : this.keys(), hasNext : function() {
-			return this.it.hasNext();
-		}, next : function() {
-			var i = this.it.next();
-			return this.ref[i];
-		}};
-	}
-	,keys: function() {
-		var a = [];
-		for( var key in this.h ) {
-		if(this.h.hasOwnProperty(key)) a.push(key | 0);
-		}
-		return HxOverrides.iter(a);
-	}
-	,remove: function(key) {
-		if(!this.h.hasOwnProperty(key)) return false;
-		delete(this.h[key]);
-		return true;
-	}
-	,exists: function(key) {
-		return this.h.hasOwnProperty(key);
-	}
-	,get: function(key) {
-		return this.h[key];
-	}
-	,set: function(key,value) {
-		this.h[key] = value;
-	}
-	,h: null
-	,__class__: IntHash
-}
-var IntIter = function(min,max) {
-	this.min = min;
-	this.max = max;
-};
-$hxClasses["IntIter"] = IntIter;
-IntIter.__name__ = ["IntIter"];
-IntIter.prototype = {
-	next: function() {
-		return this.min++;
-	}
-	,hasNext: function() {
-		return this.min < this.max;
-	}
-	,max: null
-	,min: null
-	,__class__: IntIter
 }
 var Lambda = function() { }
 $hxClasses["Lambda"] = Lambda;
@@ -259,58 +94,6 @@ Lambda.array = function(it) {
 	}
 	return a;
 }
-Lambda.list = function(it) {
-	var l = new List();
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var i = $it0.next();
-		l.add(i);
-	}
-	return l;
-}
-Lambda.map = function(it,f) {
-	var l = new List();
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var x = $it0.next();
-		l.add(f(x));
-	}
-	return l;
-}
-Lambda.mapi = function(it,f) {
-	var l = new List();
-	var i = 0;
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var x = $it0.next();
-		l.add(f(i++,x));
-	}
-	return l;
-}
-Lambda.has = function(it,elt,cmp) {
-	if(cmp == null) {
-		var $it0 = $iterator(it)();
-		while( $it0.hasNext() ) {
-			var x = $it0.next();
-			if(x == elt) return true;
-		}
-	} else {
-		var $it1 = $iterator(it)();
-		while( $it1.hasNext() ) {
-			var x = $it1.next();
-			if(cmp(x,elt)) return true;
-		}
-	}
-	return false;
-}
-Lambda.exists = function(it,f) {
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var x = $it0.next();
-		if(f(x)) return true;
-	}
-	return false;
-}
 Lambda.foreach = function(it,f) {
 	var $it0 = $iterator(it)();
 	while( $it0.hasNext() ) {
@@ -319,125 +102,13 @@ Lambda.foreach = function(it,f) {
 	}
 	return true;
 }
-Lambda.iter = function(it,f) {
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var x = $it0.next();
-		f(x);
-	}
-}
-Lambda.filter = function(it,f) {
-	var l = new List();
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var x = $it0.next();
-		if(f(x)) l.add(x);
-	}
-	return l;
-}
-Lambda.fold = function(it,f,first) {
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var x = $it0.next();
-		first = f(x,first);
-	}
-	return first;
-}
-Lambda.count = function(it,pred) {
-	var n = 0;
-	if(pred == null) {
-		var $it0 = $iterator(it)();
-		while( $it0.hasNext() ) {
-			var _ = $it0.next();
-			n++;
-		}
-	} else {
-		var $it1 = $iterator(it)();
-		while( $it1.hasNext() ) {
-			var x = $it1.next();
-			if(pred(x)) n++;
-		}
-	}
-	return n;
-}
-Lambda.empty = function(it) {
-	return !$iterator(it)().hasNext();
-}
-Lambda.indexOf = function(it,v) {
-	var i = 0;
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var v2 = $it0.next();
-		if(v == v2) return i;
-		i++;
-	}
-	return -1;
-}
-Lambda.concat = function(a,b) {
-	var l = new List();
-	var $it0 = $iterator(a)();
-	while( $it0.hasNext() ) {
-		var x = $it0.next();
-		l.add(x);
-	}
-	var $it1 = $iterator(b)();
-	while( $it1.hasNext() ) {
-		var x = $it1.next();
-		l.add(x);
-	}
-	return l;
-}
 var List = function() {
 	this.length = 0;
 };
 $hxClasses["List"] = List;
 List.__name__ = ["List"];
 List.prototype = {
-	map: function(f) {
-		var b = new List();
-		var l = this.h;
-		while(l != null) {
-			var v = l[0];
-			l = l[1];
-			b.add(f(v));
-		}
-		return b;
-	}
-	,filter: function(f) {
-		var l2 = new List();
-		var l = this.h;
-		while(l != null) {
-			var v = l[0];
-			l = l[1];
-			if(f(v)) l2.add(v);
-		}
-		return l2;
-	}
-	,join: function(sep) {
-		var s = new StringBuf();
-		var first = true;
-		var l = this.h;
-		while(l != null) {
-			if(first) first = false; else s.b += Std.string(sep);
-			s.b += Std.string(l[0]);
-			l = l[1];
-		}
-		return s.b;
-	}
-	,toString: function() {
-		var s = new StringBuf();
-		var first = true;
-		var l = this.h;
-		s.b += Std.string("{");
-		while(l != null) {
-			if(first) first = false; else s.b += Std.string(", ");
-			s.b += Std.string(Std.string(l[0]));
-			l = l[1];
-		}
-		s.b += Std.string("}");
-		return s.b;
-	}
-	,iterator: function() {
+	iterator: function() {
 		return { h : this.h, hasNext : function() {
 			return this.h != null;
 		}, next : function() {
@@ -447,60 +118,17 @@ List.prototype = {
 			return x;
 		}};
 	}
-	,remove: function(v) {
-		var prev = null;
-		var l = this.h;
-		while(l != null) {
-			if(l[0] == v) {
-				if(prev == null) this.h = l[1]; else prev[1] = l[1];
-				if(this.q == l) this.q = prev;
-				this.length--;
-				return true;
-			}
-			prev = l;
-			l = l[1];
-		}
-		return false;
-	}
-	,clear: function() {
-		this.h = null;
-		this.q = null;
-		this.length = 0;
-	}
-	,isEmpty: function() {
-		return this.h == null;
-	}
-	,pop: function() {
-		if(this.h == null) return null;
-		var x = this.h[0];
-		this.h = this.h[1];
-		if(this.h == null) this.q = null;
-		this.length--;
-		return x;
-	}
-	,last: function() {
-		return this.q == null?null:this.q[0];
-	}
-	,first: function() {
-		return this.h == null?null:this.h[0];
-	}
-	,push: function(item) {
-		var x = [item,this.h];
-		this.h = x;
-		if(this.q == null) this.q = x;
-		this.length++;
-	}
 	,add: function(item) {
 		var x = [item];
 		if(this.h == null) this.h = x; else this.q[1] = x;
 		this.q = x;
 		this.length++;
 	}
-	,length: null
-	,q: null
-	,h: null
 	,__class__: List
 }
+var IMap = function() { }
+$hxClasses["IMap"] = IMap;
+IMap.__name__ = ["IMap"];
 var Reflect = function() { }
 $hxClasses["Reflect"] = Reflect;
 Reflect.__name__ = ["Reflect"];
@@ -515,26 +143,12 @@ Reflect.field = function(o,field) {
 	}
 	return v;
 }
-Reflect.setField = function(o,field,value) {
-	o[field] = value;
-}
-Reflect.getProperty = function(o,field) {
-	var tmp;
-	return o == null?null:o.__properties__ && (tmp = o.__properties__["get_" + field])?o[tmp]():o[field];
-}
-Reflect.setProperty = function(o,field,value) {
-	var tmp;
-	if(o.__properties__ && (tmp = o.__properties__["set_" + field])) o[tmp](value); else o[field] = value;
-}
-Reflect.callMethod = function(o,func,args) {
-	return func.apply(o,args);
-}
 Reflect.fields = function(o) {
 	var a = [];
 	if(o != null) {
 		var hasOwnProperty = Object.prototype.hasOwnProperty;
 		for( var f in o ) {
-		if(hasOwnProperty.call(o,f)) a.push(f);
+		if(f != "__id__" && f != "hx__closures__" && hasOwnProperty.call(o,f)) a.push(f);
 		}
 	}
 	return a;
@@ -542,51 +156,16 @@ Reflect.fields = function(o) {
 Reflect.isFunction = function(f) {
 	return typeof(f) == "function" && !(f.__name__ || f.__ename__);
 }
-Reflect.compare = function(a,b) {
-	return a == b?0:a > b?1:-1;
-}
-Reflect.compareMethods = function(f1,f2) {
-	if(f1 == f2) return true;
-	if(!Reflect.isFunction(f1) || !Reflect.isFunction(f2)) return false;
-	return f1.scope == f2.scope && f1.method == f2.method && f1.method != null;
-}
-Reflect.isObject = function(v) {
-	if(v == null) return false;
-	var t = typeof(v);
-	return t == "string" || t == "object" && !v.__enum__ || t == "function" && (v.__name__ || v.__ename__);
-}
-Reflect.deleteField = function(o,f) {
-	if(!Reflect.hasField(o,f)) return false;
-	delete(o[f]);
+Reflect.deleteField = function(o,field) {
+	if(!Reflect.hasField(o,field)) return false;
+	delete(o[field]);
 	return true;
-}
-Reflect.copy = function(o) {
-	var o2 = { };
-	var _g = 0, _g1 = Reflect.fields(o);
-	while(_g < _g1.length) {
-		var f = _g1[_g];
-		++_g;
-		o2[f] = Reflect.field(o,f);
-	}
-	return o2;
-}
-Reflect.makeVarArgs = function(f) {
-	return function() {
-		var a = Array.prototype.slice.call(arguments);
-		return f(a);
-	};
 }
 var Std = function() { }
 $hxClasses["Std"] = Std;
 Std.__name__ = ["Std"];
-Std["is"] = function(v,t) {
-	return js.Boot.__instanceof(v,t);
-}
 Std.string = function(s) {
 	return js.Boot.__string_rec(s,"");
-}
-Std["int"] = function(x) {
-	return x | 0;
 }
 Std.parseInt = function(x) {
 	var v = parseInt(x,10);
@@ -597,29 +176,13 @@ Std.parseInt = function(x) {
 Std.parseFloat = function(x) {
 	return parseFloat(x);
 }
-Std.random = function(x) {
-	return Math.floor(Math.random() * x);
-}
 var StringBuf = function() {
 	this.b = "";
 };
 $hxClasses["StringBuf"] = StringBuf;
 StringBuf.__name__ = ["StringBuf"];
 StringBuf.prototype = {
-	toString: function() {
-		return this.b;
-	}
-	,addSub: function(s,pos,len) {
-		this.b += HxOverrides.substr(s,pos,len);
-	}
-	,addChar: function(c) {
-		this.b += String.fromCharCode(c);
-	}
-	,add: function(x) {
-		this.b += Std.string(x);
-	}
-	,b: null
-	,__class__: StringBuf
+	__class__: StringBuf
 }
 var StringTools = function() { }
 $hxClasses["StringTools"] = StringTools;
@@ -630,12 +193,6 @@ StringTools.urlEncode = function(s) {
 StringTools.urlDecode = function(s) {
 	return decodeURIComponent(s.split("+").join(" "));
 }
-StringTools.htmlEscape = function(s) {
-	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-}
-StringTools.htmlUnescape = function(s) {
-	return s.split("&gt;").join(">").split("&lt;").join("<").split("&amp;").join("&");
-}
 StringTools.startsWith = function(s,start) {
 	return s.length >= start.length && HxOverrides.substr(s,0,start.length) == start;
 }
@@ -644,69 +201,8 @@ StringTools.endsWith = function(s,end) {
 	var slen = s.length;
 	return slen >= elen && HxOverrides.substr(s,slen - elen,elen) == end;
 }
-StringTools.isSpace = function(s,pos) {
-	var c = HxOverrides.cca(s,pos);
-	return c >= 9 && c <= 13 || c == 32;
-}
-StringTools.ltrim = function(s) {
-	var l = s.length;
-	var r = 0;
-	while(r < l && StringTools.isSpace(s,r)) r++;
-	if(r > 0) return HxOverrides.substr(s,r,l - r); else return s;
-}
-StringTools.rtrim = function(s) {
-	var l = s.length;
-	var r = 0;
-	while(r < l && StringTools.isSpace(s,l - r - 1)) r++;
-	if(r > 0) return HxOverrides.substr(s,0,l - r); else return s;
-}
-StringTools.trim = function(s) {
-	return StringTools.ltrim(StringTools.rtrim(s));
-}
-StringTools.rpad = function(s,c,l) {
-	var sl = s.length;
-	var cl = c.length;
-	while(sl < l) if(l - sl < cl) {
-		s += HxOverrides.substr(c,0,l - sl);
-		sl = l;
-	} else {
-		s += c;
-		sl += cl;
-	}
-	return s;
-}
-StringTools.lpad = function(s,c,l) {
-	var ns = "";
-	var sl = s.length;
-	if(sl >= l) return s;
-	var cl = c.length;
-	while(sl < l) if(l - sl < cl) {
-		ns += HxOverrides.substr(c,0,l - sl);
-		sl = l;
-	} else {
-		ns += c;
-		sl += cl;
-	}
-	return ns + s;
-}
 StringTools.replace = function(s,sub,by) {
 	return s.split(sub).join(by);
-}
-StringTools.hex = function(n,digits) {
-	var s = "";
-	var hexChars = "0123456789ABCDEF";
-	do {
-		s = hexChars.charAt(n & 15) + s;
-		n >>>= 4;
-	} while(n > 0);
-	if(digits != null) while(s.length < digits) s = "0" + s;
-	return s;
-}
-StringTools.fastCodeAt = function(s,index) {
-	return s.charCodeAt(index);
-}
-StringTools.isEOF = function(c) {
-	return c != c;
 }
 var ValueType = $hxClasses["ValueType"] = { __ename__ : ["ValueType"], __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"] }
 ValueType.TNull = ["TNull",0];
@@ -735,17 +231,6 @@ ValueType.TUnknown.__enum__ = ValueType;
 var Type = function() { }
 $hxClasses["Type"] = Type;
 Type.__name__ = ["Type"];
-Type.getClass = function(o) {
-	if(o == null) return null;
-	return o.__class__;
-}
-Type.getEnum = function(o) {
-	if(o == null) return null;
-	return o.__enum__;
-}
-Type.getSuperClass = function(c) {
-	return c.__super__;
-}
 Type.getClassName = function(c) {
 	var a = c.__name__;
 	return a.join(".");
@@ -764,31 +249,6 @@ Type.resolveEnum = function(name) {
 	if(e == null || !e.__ename__) return null;
 	return e;
 }
-Type.createInstance = function(cl,args) {
-	switch(args.length) {
-	case 0:
-		return new cl();
-	case 1:
-		return new cl(args[0]);
-	case 2:
-		return new cl(args[0],args[1]);
-	case 3:
-		return new cl(args[0],args[1],args[2]);
-	case 4:
-		return new cl(args[0],args[1],args[2],args[3]);
-	case 5:
-		return new cl(args[0],args[1],args[2],args[3],args[4]);
-	case 6:
-		return new cl(args[0],args[1],args[2],args[3],args[4],args[5]);
-	case 7:
-		return new cl(args[0],args[1],args[2],args[3],args[4],args[5],args[6]);
-	case 8:
-		return new cl(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7]);
-	default:
-		throw "Too many arguments";
-	}
-	return null;
-}
 Type.createEmptyInstance = function(cl) {
 	function empty() {}; empty.prototype = cl.prototype;
 	return new empty();
@@ -803,33 +263,13 @@ Type.createEnum = function(e,constr,params) {
 	if(params != null && params.length != 0) throw "Constructor " + constr + " does not need parameters";
 	return f;
 }
-Type.createEnumIndex = function(e,index,params) {
-	var c = e.__constructs__[index];
-	if(c == null) throw index + " is not a valid enum constructor index";
-	return Type.createEnum(e,c,params);
-}
-Type.getInstanceFields = function(c) {
-	var a = [];
-	for(var i in c.prototype) a.push(i);
-	HxOverrides.remove(a,"__class__");
-	HxOverrides.remove(a,"__properties__");
-	return a;
-}
-Type.getClassFields = function(c) {
-	var a = Reflect.fields(c);
-	HxOverrides.remove(a,"__name__");
-	HxOverrides.remove(a,"__interfaces__");
-	HxOverrides.remove(a,"__properties__");
-	HxOverrides.remove(a,"__super__");
-	HxOverrides.remove(a,"prototype");
-	return a;
-}
 Type.getEnumConstructs = function(e) {
 	var a = e.__constructs__;
 	return a.slice();
 }
 Type["typeof"] = function(v) {
-	switch(typeof(v)) {
+	var _g = typeof(v);
+	switch(_g) {
 	case "boolean":
 		return ValueType.TBool;
 	case "string":
@@ -853,325 +293,22 @@ Type["typeof"] = function(v) {
 		return ValueType.TUnknown;
 	}
 }
-Type.enumEq = function(a,b) {
-	if(a == b) return true;
-	try {
-		if(a[0] != b[0]) return false;
-		var _g1 = 2, _g = a.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			if(!Type.enumEq(a[i],b[i])) return false;
-		}
-		var e = a.__enum__;
-		if(e != b.__enum__ || e == null) return false;
-	} catch( e ) {
-		return false;
-	}
-	return true;
-}
-Type.enumConstructor = function(e) {
-	return e[0];
-}
-Type.enumParameters = function(e) {
-	return e.slice(2);
-}
-Type.enumIndex = function(e) {
-	return e[1];
-}
-Type.allEnums = function(e) {
-	var all = [];
-	var cst = e.__constructs__;
-	var _g = 0;
-	while(_g < cst.length) {
-		var c = cst[_g];
-		++_g;
-		var v = Reflect.field(e,c);
-		if(!Reflect.isFunction(v)) all.push(v);
-	}
-	return all;
-}
 var haxe = {}
-haxe.Json = function() {
-};
+haxe.Json = function() { }
 $hxClasses["haxe.Json"] = haxe.Json;
 haxe.Json.__name__ = ["haxe","Json"];
-haxe.Json.parse = function(text) {
-	return new haxe.Json().doParse(text);
+haxe.Json.stringify = function(obj,replacer,insertion) {
+	return js.Node.stringify(obj,replacer,insertion);
 }
-haxe.Json.stringify = function(value) {
-	return new haxe.Json().toString(value);
-}
-haxe.Json.prototype = {
-	parseString: function() {
-		var start = this.pos;
-		var buf = new StringBuf();
-		while(true) {
-			var c = this.str.charCodeAt(this.pos++);
-			if(c == 34) break;
-			if(c == 92) {
-				buf.b += HxOverrides.substr(this.str,start,this.pos - start - 1);
-				c = this.str.charCodeAt(this.pos++);
-				switch(c) {
-				case 114:
-					buf.b += String.fromCharCode(13);
-					break;
-				case 110:
-					buf.b += String.fromCharCode(10);
-					break;
-				case 116:
-					buf.b += String.fromCharCode(9);
-					break;
-				case 98:
-					buf.b += String.fromCharCode(8);
-					break;
-				case 102:
-					buf.b += String.fromCharCode(12);
-					break;
-				case 47:case 92:case 34:
-					buf.b += String.fromCharCode(c);
-					break;
-				case 117:
-					var uc = Std.parseInt("0x" + HxOverrides.substr(this.str,this.pos,4));
-					this.pos += 4;
-					buf.b += String.fromCharCode(uc);
-					break;
-				default:
-					throw "Invalid escape sequence \\" + String.fromCharCode(c) + " at position " + (this.pos - 1);
-				}
-				start = this.pos;
-			} else if(c != c) throw "Unclosed string";
-		}
-		buf.b += HxOverrides.substr(this.str,start,this.pos - start - 1);
-		return buf.b;
-	}
-	,parseRec: function() {
-		while(true) {
-			var c = this.str.charCodeAt(this.pos++);
-			switch(c) {
-			case 32:case 13:case 10:case 9:
-				break;
-			case 123:
-				var obj = { }, field = null, comma = null;
-				while(true) {
-					var c1 = this.str.charCodeAt(this.pos++);
-					switch(c1) {
-					case 32:case 13:case 10:case 9:
-						break;
-					case 125:
-						if(field != null || comma == false) this.invalidChar();
-						return obj;
-					case 58:
-						if(field == null) this.invalidChar();
-						obj[field] = this.parseRec();
-						field = null;
-						comma = true;
-						break;
-					case 44:
-						if(comma) comma = false; else this.invalidChar();
-						break;
-					case 34:
-						if(comma) this.invalidChar();
-						field = this.parseString();
-						break;
-					default:
-						this.invalidChar();
-					}
-				}
-				break;
-			case 91:
-				var arr = [], comma = null;
-				while(true) {
-					var c1 = this.str.charCodeAt(this.pos++);
-					switch(c1) {
-					case 32:case 13:case 10:case 9:
-						break;
-					case 93:
-						if(comma == false) this.invalidChar();
-						return arr;
-					case 44:
-						if(comma) comma = false; else this.invalidChar();
-						break;
-					default:
-						if(comma) this.invalidChar();
-						this.pos--;
-						arr.push(this.parseRec());
-						comma = true;
-					}
-				}
-				break;
-			case 116:
-				var save = this.pos;
-				if(this.str.charCodeAt(this.pos++) != 114 || this.str.charCodeAt(this.pos++) != 117 || this.str.charCodeAt(this.pos++) != 101) {
-					this.pos = save;
-					this.invalidChar();
-				}
-				return true;
-			case 102:
-				var save = this.pos;
-				if(this.str.charCodeAt(this.pos++) != 97 || this.str.charCodeAt(this.pos++) != 108 || this.str.charCodeAt(this.pos++) != 115 || this.str.charCodeAt(this.pos++) != 101) {
-					this.pos = save;
-					this.invalidChar();
-				}
-				return false;
-			case 110:
-				var save = this.pos;
-				if(this.str.charCodeAt(this.pos++) != 117 || this.str.charCodeAt(this.pos++) != 108 || this.str.charCodeAt(this.pos++) != 108) {
-					this.pos = save;
-					this.invalidChar();
-				}
-				return null;
-			case 34:
-				return this.parseString();
-			case 48:case 49:case 50:case 51:case 52:case 53:case 54:case 55:case 56:case 57:case 45:
-				this.pos--;
-				if(!this.reg_float.match(HxOverrides.substr(this.str,this.pos,null))) throw "Invalid float at position " + this.pos;
-				var v = this.reg_float.matched(0);
-				this.pos += v.length;
-				var f = Std.parseFloat(v);
-				var i = f | 0;
-				return i == f?i:f;
-			default:
-				this.invalidChar();
-			}
-		}
-	}
-	,nextChar: function() {
-		return this.str.charCodeAt(this.pos++);
-	}
-	,invalidChar: function() {
-		this.pos--;
-		throw "Invalid char " + this.str.charCodeAt(this.pos) + " at position " + this.pos;
-	}
-	,doParse: function(str) {
-		this.reg_float = new EReg("^-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?","");
-		this.str = str;
-		this.pos = 0;
-		return this.parseRec();
-	}
-	,quote: function(s) {
-		this.buf.b += Std.string("\"");
-		var i = 0;
-		while(true) {
-			var c = s.charCodeAt(i++);
-			if(c != c) break;
-			switch(c) {
-			case 34:
-				this.buf.b += Std.string("\\\"");
-				break;
-			case 92:
-				this.buf.b += Std.string("\\\\");
-				break;
-			case 10:
-				this.buf.b += Std.string("\\n");
-				break;
-			case 13:
-				this.buf.b += Std.string("\\r");
-				break;
-			case 9:
-				this.buf.b += Std.string("\\t");
-				break;
-			case 8:
-				this.buf.b += Std.string("\\b");
-				break;
-			case 12:
-				this.buf.b += Std.string("\\f");
-				break;
-			default:
-				this.buf.b += String.fromCharCode(c);
-			}
-		}
-		this.buf.b += Std.string("\"");
-	}
-	,toStringRec: function(v) {
-		var $e = (Type["typeof"](v));
-		switch( $e[1] ) {
-		case 8:
-			this.buf.b += Std.string("\"???\"");
-			break;
-		case 4:
-			this.objString(v);
-			break;
-		case 1:
-		case 2:
-			this.buf.b += Std.string(v);
-			break;
-		case 5:
-			this.buf.b += Std.string("\"<fun>\"");
-			break;
-		case 6:
-			var c = $e[2];
-			if(c == String) this.quote(v); else if(c == Array) {
-				var v1 = v;
-				this.buf.b += Std.string("[");
-				var len = v1.length;
-				if(len > 0) {
-					this.toStringRec(v1[0]);
-					var i = 1;
-					while(i < len) {
-						this.buf.b += Std.string(",");
-						this.toStringRec(v1[i++]);
-					}
-				}
-				this.buf.b += Std.string("]");
-			} else if(c == Hash) {
-				var v1 = v;
-				var o = { };
-				var $it0 = v1.keys();
-				while( $it0.hasNext() ) {
-					var k = $it0.next();
-					o[k] = v1.get(k);
-				}
-				this.objString(o);
-			} else this.objString(v);
-			break;
-		case 7:
-			var e = $e[2];
-			this.buf.b += Std.string(v[1]);
-			break;
-		case 3:
-			this.buf.b += Std.string(v?"true":"false");
-			break;
-		case 0:
-			this.buf.b += Std.string("null");
-			break;
-		}
-	}
-	,objString: function(v) {
-		this.fieldsString(v,Reflect.fields(v));
-	}
-	,fieldsString: function(v,fields) {
-		var first = true;
-		this.buf.b += Std.string("{");
-		var _g = 0;
-		while(_g < fields.length) {
-			var f = fields[_g];
-			++_g;
-			var value = Reflect.field(v,f);
-			if(Reflect.isFunction(value)) continue;
-			if(first) first = false; else this.buf.b += Std.string(",");
-			this.quote(f);
-			this.buf.b += Std.string(":");
-			this.toStringRec(value);
-		}
-		this.buf.b += Std.string("}");
-	}
-	,toString: function(v) {
-		this.buf = new StringBuf();
-		this.toStringRec(v);
-		return this.buf.b;
-	}
-	,reg_float: null
-	,pos: null
-	,str: null
-	,buf: null
-	,__class__: haxe.Json
+haxe.Json.parse = function(jsonString) {
+	return js.Node.parse(jsonString);
 }
 haxe.Serializer = function() {
 	this.buf = new StringBuf();
 	this.cache = new Array();
 	this.useCache = haxe.Serializer.USE_CACHE;
 	this.useEnumIndex = haxe.Serializer.USE_ENUM_INDEX;
-	this.shash = new Hash();
+	this.shash = new haxe.ds.StringMap();
 	this.scount = 0;
 };
 $hxClasses["haxe.Serializer"] = haxe.Serializer;
@@ -1182,27 +319,24 @@ haxe.Serializer.run = function(v) {
 	return s.toString();
 }
 haxe.Serializer.prototype = {
-	serializeException: function(e) {
-		this.buf.b += Std.string("x");
-		this.serialize(e);
-	}
-	,serialize: function(v) {
-		var $e = (Type["typeof"](v));
+	serialize: function(v) {
+		var _g = Type["typeof"](v);
+		var $e = (_g);
 		switch( $e[1] ) {
 		case 0:
-			this.buf.b += Std.string("n");
+			this.buf.b += "n";
 			break;
 		case 1:
 			if(v == 0) {
-				this.buf.b += Std.string("z");
+				this.buf.b += "z";
 				return;
 			}
-			this.buf.b += Std.string("i");
+			this.buf.b += "i";
 			this.buf.b += Std.string(v);
 			break;
 		case 2:
-			if(Math.isNaN(v)) this.buf.b += Std.string("k"); else if(!Math.isFinite(v)) this.buf.b += Std.string(v < 0?"m":"p"); else {
-				this.buf.b += Std.string("d");
+			if(Math.isNaN(v)) this.buf.b += "k"; else if(!Math.isFinite(v)) this.buf.b += Std.string(v < 0?"m":"p"); else {
+				this.buf.b += "d";
 				this.buf.b += Std.string(v);
 			}
 			break;
@@ -1219,15 +353,15 @@ haxe.Serializer.prototype = {
 			switch(c) {
 			case Array:
 				var ucount = 0;
-				this.buf.b += Std.string("a");
+				this.buf.b += "a";
 				var l = v.length;
-				var _g = 0;
-				while(_g < l) {
-					var i = _g++;
+				var _g1 = 0;
+				while(_g1 < l) {
+					var i = _g1++;
 					if(v[i] == null) ucount++; else {
 						if(ucount > 0) {
-							if(ucount == 1) this.buf.b += Std.string("n"); else {
-								this.buf.b += Std.string("u");
+							if(ucount == 1) this.buf.b += "n"; else {
+								this.buf.b += "u";
 								this.buf.b += Std.string(ucount);
 							}
 							ucount = 0;
@@ -1236,30 +370,30 @@ haxe.Serializer.prototype = {
 					}
 				}
 				if(ucount > 0) {
-					if(ucount == 1) this.buf.b += Std.string("n"); else {
-						this.buf.b += Std.string("u");
+					if(ucount == 1) this.buf.b += "n"; else {
+						this.buf.b += "u";
 						this.buf.b += Std.string(ucount);
 					}
 				}
-				this.buf.b += Std.string("h");
+				this.buf.b += "h";
 				break;
 			case List:
-				this.buf.b += Std.string("l");
+				this.buf.b += "l";
 				var v1 = v;
 				var $it0 = v1.iterator();
 				while( $it0.hasNext() ) {
 					var i = $it0.next();
 					this.serialize(i);
 				}
-				this.buf.b += Std.string("h");
+				this.buf.b += "h";
 				break;
 			case Date:
 				var d = v;
-				this.buf.b += Std.string("v");
+				this.buf.b += "v";
 				this.buf.b += Std.string(HxOverrides.dateStr(d));
 				break;
-			case Hash:
-				this.buf.b += Std.string("b");
+			case haxe.ds.StringMap:
+				this.buf.b += "b";
 				var v1 = v;
 				var $it1 = v1.keys();
 				while( $it1.hasNext() ) {
@@ -1267,19 +401,33 @@ haxe.Serializer.prototype = {
 					this.serializeString(k);
 					this.serialize(v1.get(k));
 				}
-				this.buf.b += Std.string("h");
+				this.buf.b += "h";
 				break;
-			case IntHash:
-				this.buf.b += Std.string("q");
+			case haxe.ds.IntMap:
+				this.buf.b += "q";
 				var v1 = v;
 				var $it2 = v1.keys();
 				while( $it2.hasNext() ) {
 					var k = $it2.next();
-					this.buf.b += Std.string(":");
+					this.buf.b += ":";
 					this.buf.b += Std.string(k);
 					this.serialize(v1.get(k));
 				}
-				this.buf.b += Std.string("h");
+				this.buf.b += "h";
+				break;
+			case haxe.ds.ObjectMap:
+				this.buf.b += "M";
+				var v1 = v;
+				var $it3 = v1.keys();
+				while( $it3.hasNext() ) {
+					var k = $it3.next();
+					var id = Reflect.field(k,"__id__");
+					Reflect.deleteField(k,"__id__");
+					this.serialize(k);
+					k.__id__ = id;
+					this.serialize(v1.h[k.__id__]);
+				}
+				this.buf.b += "h";
 				break;
 			case haxe.io.Bytes:
 				var v1 = v;
@@ -1308,21 +456,21 @@ haxe.Serializer.prototype = {
 					charsBuf.b += Std.string(b64.charAt(b1 << 4 & 63));
 				}
 				var chars = charsBuf.b;
-				this.buf.b += Std.string("s");
+				this.buf.b += "s";
 				this.buf.b += Std.string(chars.length);
-				this.buf.b += Std.string(":");
+				this.buf.b += ":";
 				this.buf.b += Std.string(chars);
 				break;
 			default:
 				this.cache.pop();
 				if(v.hxSerialize != null) {
-					this.buf.b += Std.string("C");
+					this.buf.b += "C";
 					this.serializeString(Type.getClassName(c));
 					this.cache.push(v);
 					v.hxSerialize(this);
-					this.buf.b += Std.string("g");
+					this.buf.b += "g";
 				} else {
-					this.buf.b += Std.string("c");
+					this.buf.b += "c";
 					this.serializeString(Type.getClassName(c));
 					this.cache.push(v);
 					this.serializeFields(v);
@@ -1331,7 +479,7 @@ haxe.Serializer.prototype = {
 			break;
 		case 4:
 			if(this.useCache && this.serializeRef(v)) return;
-			this.buf.b += Std.string("o");
+			this.buf.b += "o";
 			this.serializeFields(v);
 			break;
 		case 7:
@@ -1341,15 +489,15 @@ haxe.Serializer.prototype = {
 			this.buf.b += Std.string(this.useEnumIndex?"j":"w");
 			this.serializeString(Type.getEnumName(e));
 			if(this.useEnumIndex) {
-				this.buf.b += Std.string(":");
+				this.buf.b += ":";
 				this.buf.b += Std.string(v[1]);
 			} else this.serializeString(v[0]);
-			this.buf.b += Std.string(":");
+			this.buf.b += ":";
 			var l = v.length;
 			this.buf.b += Std.string(l - 2);
-			var _g = 2;
-			while(_g < l) {
-				var i = _g++;
+			var _g1 = 2;
+			while(_g1 < l) {
+				var i = _g1++;
 				this.serialize(v[i]);
 			}
 			this.cache.push(v);
@@ -1369,7 +517,7 @@ haxe.Serializer.prototype = {
 			this.serializeString(f);
 			this.serialize(Reflect.field(v,f));
 		}
-		this.buf.b += Std.string("g");
+		this.buf.b += "g";
 	}
 	,serializeRef: function(v) {
 		var vt = typeof(v);
@@ -1378,7 +526,7 @@ haxe.Serializer.prototype = {
 			var i = _g1++;
 			var ci = this.cache[i];
 			if(typeof(ci) == vt && ci == v) {
-				this.buf.b += Std.string("r");
+				this.buf.b += "r";
 				this.buf.b += Std.string(i);
 				return true;
 			}
@@ -1389,26 +537,20 @@ haxe.Serializer.prototype = {
 	,serializeString: function(s) {
 		var x = this.shash.get(s);
 		if(x != null) {
-			this.buf.b += Std.string("R");
+			this.buf.b += "R";
 			this.buf.b += Std.string(x);
 			return;
 		}
 		this.shash.set(s,this.scount++);
-		this.buf.b += Std.string("y");
+		this.buf.b += "y";
 		s = StringTools.urlEncode(s);
 		this.buf.b += Std.string(s.length);
-		this.buf.b += Std.string(":");
+		this.buf.b += ":";
 		this.buf.b += Std.string(s);
 	}
 	,toString: function() {
 		return this.buf.b;
 	}
-	,useEnumIndex: null
-	,useCache: null
-	,scount: null
-	,shash: null
-	,cache: null
-	,buf: null
 	,__class__: haxe.Serializer
 }
 haxe.Unserializer = function(buf) {
@@ -1440,7 +582,8 @@ haxe.Unserializer.run = function(v) {
 }
 haxe.Unserializer.prototype = {
 	unserialize: function() {
-		switch(this.buf.charCodeAt(this.pos++)) {
+		var _g = this.buf.charCodeAt(this.pos++);
+		switch(_g) {
 		case 110:
 			return null;
 		case 116:
@@ -1539,7 +682,7 @@ haxe.Unserializer.prototype = {
 			this.pos++;
 			return l;
 		case 98:
-			var h = new Hash();
+			var h = new haxe.ds.StringMap();
 			this.cache.push(h);
 			var buf = this.buf;
 			while(this.buf.charCodeAt(this.pos) != 104) {
@@ -1549,7 +692,7 @@ haxe.Unserializer.prototype = {
 			this.pos++;
 			return h;
 		case 113:
-			var h = new IntHash();
+			var h = new haxe.ds.IntMap();
 			this.cache.push(h);
 			var buf = this.buf;
 			var c = this.buf.charCodeAt(this.pos++);
@@ -1558,7 +701,17 @@ haxe.Unserializer.prototype = {
 				h.set(i,this.unserialize());
 				c = this.buf.charCodeAt(this.pos++);
 			}
-			if(c != 104) throw "Invalid IntHash format";
+			if(c != 104) throw "Invalid IntMap format";
+			return h;
+		case 77:
+			var h = new haxe.ds.ObjectMap();
+			this.cache.push(h);
+			var buf = this.buf;
+			while(this.buf.charCodeAt(this.pos) != 104) {
+				var s = this.unserialize();
+				h.set(s,this.unserialize());
+			}
+			this.pos++;
 			return h;
 		case 118:
 			var d = HxOverrides.strDate(HxOverrides.substr(this.buf,this.pos,19));
@@ -1583,19 +736,19 @@ haxe.Unserializer.prototype = {
 			while(i < max) {
 				var c1 = codes[buf.charCodeAt(i++)];
 				var c2 = codes[buf.charCodeAt(i++)];
-				bytes.b[bpos++] = (c1 << 2 | c2 >> 4) & 255;
+				bytes.b[bpos++] = c1 << 2 | c2 >> 4;
 				var c3 = codes[buf.charCodeAt(i++)];
-				bytes.b[bpos++] = (c2 << 4 | c3 >> 2) & 255;
+				bytes.b[bpos++] = c2 << 4 | c3 >> 2;
 				var c4 = codes[buf.charCodeAt(i++)];
-				bytes.b[bpos++] = (c3 << 6 | c4) & 255;
+				bytes.b[bpos++] = c3 << 6 | c4;
 			}
 			if(rest >= 2) {
 				var c1 = codes[buf.charCodeAt(i++)];
 				var c2 = codes[buf.charCodeAt(i++)];
-				bytes.b[bpos++] = (c1 << 2 | c2 >> 4) & 255;
+				bytes.b[bpos++] = c1 << 2 | c2 >> 4;
 				if(rest == 3) {
 					var c3 = codes[buf.charCodeAt(i++)];
-					bytes.b[bpos++] = (c2 << 4 | c3 >> 2) & 255;
+					bytes.b[bpos++] = c2 << 4 | c3 >> 2;
 				}
 			}
 			this.pos += len;
@@ -1654,12 +807,6 @@ haxe.Unserializer.prototype = {
 		if(s) k *= -1;
 		return k;
 	}
-	,get: function(p) {
-		return this.buf.charCodeAt(p);
-	}
-	,getResolver: function() {
-		return this.resolver;
-	}
 	,setResolver: function(r) {
 		if(r == null) this.resolver = { resolveClass : function(_) {
 			return null;
@@ -1667,13 +814,77 @@ haxe.Unserializer.prototype = {
 			return null;
 		}}; else this.resolver = r;
 	}
-	,resolver: null
-	,scache: null
-	,cache: null
-	,length: null
-	,pos: null
-	,buf: null
 	,__class__: haxe.Unserializer
+}
+haxe.ds = {}
+haxe.ds.IntMap = function() {
+	this.h = { };
+};
+$hxClasses["haxe.ds.IntMap"] = haxe.ds.IntMap;
+haxe.ds.IntMap.__name__ = ["haxe","ds","IntMap"];
+haxe.ds.IntMap.__interfaces__ = [IMap];
+haxe.ds.IntMap.prototype = {
+	keys: function() {
+		var a = [];
+		for( var key in this.h ) {
+		if(this.h.hasOwnProperty(key)) a.push(key | 0);
+		}
+		return HxOverrides.iter(a);
+	}
+	,get: function(key) {
+		return this.h[key];
+	}
+	,set: function(key,value) {
+		this.h[key] = value;
+	}
+	,__class__: haxe.ds.IntMap
+}
+haxe.ds.ObjectMap = function() {
+	this.h = { };
+	this.h.__keys__ = { };
+};
+$hxClasses["haxe.ds.ObjectMap"] = haxe.ds.ObjectMap;
+haxe.ds.ObjectMap.__name__ = ["haxe","ds","ObjectMap"];
+haxe.ds.ObjectMap.__interfaces__ = [IMap];
+haxe.ds.ObjectMap.prototype = {
+	keys: function() {
+		var a = [];
+		for( var key in this.h.__keys__ ) {
+		if(this.h.hasOwnProperty(key)) a.push(this.h.__keys__[key]);
+		}
+		return HxOverrides.iter(a);
+	}
+	,set: function(key,value) {
+		var id = key.__id__ != null?key.__id__:key.__id__ = ++haxe.ds.ObjectMap.count;
+		this.h[id] = value;
+		this.h.__keys__[id] = key;
+	}
+	,__class__: haxe.ds.ObjectMap
+}
+haxe.ds.StringMap = function() {
+	this.h = { };
+};
+$hxClasses["haxe.ds.StringMap"] = haxe.ds.StringMap;
+haxe.ds.StringMap.__name__ = ["haxe","ds","StringMap"];
+haxe.ds.StringMap.__interfaces__ = [IMap];
+haxe.ds.StringMap.prototype = {
+	keys: function() {
+		var a = [];
+		for( var key in this.h ) {
+		if(this.h.hasOwnProperty(key)) a.push(key.substr(1));
+		}
+		return HxOverrides.iter(a);
+	}
+	,exists: function(key) {
+		return this.h.hasOwnProperty("$" + key);
+	}
+	,get: function(key) {
+		return this.h["$" + key];
+	}
+	,set: function(key,value) {
+		this.h["$" + key] = value;
+	}
+	,__class__: haxe.ds.StringMap
 }
 haxe.io = {}
 haxe.io.Bytes = function(length,b) {
@@ -1683,35 +894,11 @@ haxe.io.Bytes = function(length,b) {
 $hxClasses["haxe.io.Bytes"] = haxe.io.Bytes;
 haxe.io.Bytes.__name__ = ["haxe","io","Bytes"];
 haxe.io.Bytes.alloc = function(length) {
-	var a = new Array();
-	var _g = 0;
-	while(_g < length) {
-		var i = _g++;
-		a.push(0);
-	}
-	return new haxe.io.Bytes(length,a);
+	return new haxe.io.Bytes(length,new Buffer(length));
 }
 haxe.io.Bytes.ofString = function(s) {
-	var a = new Array();
-	var _g1 = 0, _g = s.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		var c = s.charCodeAt(i);
-		if(c <= 127) a.push(c); else if(c <= 2047) {
-			a.push(192 | c >> 6);
-			a.push(128 | c & 63);
-		} else if(c <= 65535) {
-			a.push(224 | c >> 12);
-			a.push(128 | c >> 6 & 63);
-			a.push(128 | c & 63);
-		} else {
-			a.push(240 | c >> 18);
-			a.push(128 | c >> 12 & 63);
-			a.push(128 | c >> 6 & 63);
-			a.push(128 | c & 63);
-		}
-	}
-	return new haxe.io.Bytes(a.length,a);
+	var nb = new Buffer(s,"utf8");
+	return new haxe.io.Bytes(nb.length,nb);
 }
 haxe.io.Bytes.ofData = function(b) {
 	return new haxe.io.Bytes(b.length,b);
@@ -1719,24 +906,6 @@ haxe.io.Bytes.ofData = function(b) {
 haxe.io.Bytes.prototype = {
 	getData: function() {
 		return this.b;
-	}
-	,toHex: function() {
-		var s = new StringBuf();
-		var chars = [];
-		var str = "0123456789abcdef";
-		var _g1 = 0, _g = str.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			chars.push(HxOverrides.cca(str,i));
-		}
-		var _g1 = 0, _g = this.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			var c = this.b[i];
-			s.b += String.fromCharCode(chars[c >> 4]);
-			s.b += String.fromCharCode(chars[c & 15]);
-		}
-		return s.b;
 	}
 	,toString: function() {
 		return this.readString(0,this.length);
@@ -1777,34 +946,20 @@ haxe.io.Bytes.prototype = {
 	}
 	,sub: function(pos,len) {
 		if(pos < 0 || len < 0 || pos + len > this.length) throw haxe.io.Error.OutsideBounds;
-		return new haxe.io.Bytes(len,this.b.slice(pos,pos + len));
+		var nb = new Buffer(len), slice = this.b.slice(pos,pos + len);
+		slice.copy(nb,0,0,len);
+		return new haxe.io.Bytes(len,nb);
 	}
 	,blit: function(pos,src,srcpos,len) {
 		if(pos < 0 || srcpos < 0 || len < 0 || pos + len > this.length || srcpos + len > src.length) throw haxe.io.Error.OutsideBounds;
-		var b1 = this.b;
-		var b2 = src.b;
-		if(b1 == b2 && pos > srcpos) {
-			var i = len;
-			while(i > 0) {
-				i--;
-				b1[i + pos] = b2[i + srcpos];
-			}
-			return;
-		}
-		var _g = 0;
-		while(_g < len) {
-			var i = _g++;
-			b1[i + pos] = b2[i + srcpos];
-		}
+		src.b.copy(this.b,pos,srcpos,srcpos + len);
 	}
 	,set: function(pos,v) {
-		this.b[pos] = v & 255;
+		this.b[pos] = v;
 	}
 	,get: function(pos) {
 		return this.b[pos];
 	}
-	,b: null
-	,length: null
 	,__class__: haxe.io.Bytes
 }
 haxe.io.Error = $hxClasses["haxe.io.Error"] = { __ename__ : ["haxe","io","Error"], __constructs__ : ["Blocked","Overflow","OutsideBounds","Custom"] }
@@ -1822,28 +977,6 @@ var js = {}
 js.Boot = function() { }
 $hxClasses["js.Boot"] = js.Boot;
 js.Boot.__name__ = ["js","Boot"];
-js.Boot.__unhtml = function(s) {
-	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-}
-js.Boot.__trace = function(v,i) {
-	var msg = i != null?i.fileName + ":" + i.lineNumber + ": ":"";
-	msg += js.Boot.__string_rec(v,"");
-	var d;
-	if(typeof(document) != "undefined" && (d = document.getElementById("haxe:trace")) != null) d.innerHTML += js.Boot.__unhtml(msg) + "<br/>"; else if(typeof(console) != "undefined" && console.log != null) console.log(msg);
-}
-js.Boot.__clear_trace = function() {
-	var d = document.getElementById("haxe:trace");
-	if(d != null) d.innerHTML = "";
-}
-js.Boot.isClass = function(o) {
-	return o.__name__;
-}
-js.Boot.isEnum = function(e) {
-	return e.__ename__;
-}
-js.Boot.getClass = function(o) {
-	return o.__class__;
-}
 js.Boot.__string_rec = function(o,s) {
 	if(o == null) return "null";
 	if(s.length >= 5) return "<...>";
@@ -1925,52 +1058,32 @@ js.Boot.__interfLoop = function(cc,cl) {
 	return js.Boot.__interfLoop(cc.__super__,cl);
 }
 js.Boot.__instanceof = function(o,cl) {
-	try {
-		if(o instanceof cl) {
-			if(cl == Array) return o.__enum__ == null;
-			return true;
-		}
-		if(js.Boot.__interfLoop(o.__class__,cl)) return true;
-	} catch( e ) {
-		if(cl == null) return false;
-	}
+	if(cl == null) return false;
 	switch(cl) {
 	case Int:
-		return Math.ceil(o%2147483648.0) === o;
+		return (o|0) === o;
 	case Float:
 		return typeof(o) == "number";
 	case Bool:
-		return o === true || o === false;
+		return typeof(o) == "boolean";
 	case String:
 		return typeof(o) == "string";
 	case Dynamic:
 		return true;
 	default:
-		if(o == null) return false;
-		if(cl == Class && o.__name__ != null) return true; else null;
-		if(cl == Enum && o.__ename__ != null) return true; else null;
+		if(o != null) {
+			if(typeof(cl) == "function") {
+				if(o instanceof cl) {
+					if(cl == Array) return o.__enum__ == null;
+					return true;
+				}
+				if(js.Boot.__interfLoop(o.__class__,cl)) return true;
+			}
+		} else return false;
+		if(cl == Class && o.__name__ != null) return true;
+		if(cl == Enum && o.__ename__ != null) return true;
 		return o.__enum__ == cl;
 	}
-}
-js.Boot.__cast = function(o,t) {
-	if(js.Boot.__instanceof(o,t)) return o; else throw "Cannot cast " + Std.string(o) + " to " + Std.string(t);
-}
-js.Lib = function() { }
-$hxClasses["js.Lib"] = js.Lib;
-js.Lib.__name__ = ["js","Lib"];
-js.Lib.document = null;
-js.Lib.window = null;
-js.Lib.debug = function() {
-	debugger;
-}
-js.Lib.alert = function(v) {
-	alert(js.Boot.__string_rec(v,""));
-}
-js.Lib["eval"] = function(code) {
-	return eval(code);
-}
-js.Lib.setErrorHandler = function(f) {
-	js.Lib.onerror = f;
 }
 js.NodeC = function() { }
 $hxClasses["js.NodeC"] = js.NodeC;
@@ -1978,49 +1091,34 @@ js.NodeC.__name__ = ["js","NodeC"];
 js.Node = function() { }
 $hxClasses["js.Node"] = js.Node;
 js.Node.__name__ = ["js","Node"];
-js.Node.require = null;
-js.Node.querystring = null;
-js.Node.util = null;
-js.Node.fs = null;
-js.Node.dgram = null;
-js.Node.net = null;
-js.Node.os = null;
-js.Node.http = null;
-js.Node.https = null;
-js.Node.path = null;
-js.Node.url = null;
-js.Node.dns = null;
-js.Node.vm = null;
-js.Node.process = null;
-js.Node.tty = null;
-js.Node.assert = null;
-js.Node.crypto = null;
-js.Node.tls = null;
-js.Node.repl = null;
-js.Node.childProcess = null;
-js.Node.console = null;
-js.Node.cluster = null;
-js.Node.setTimeout = null;
-js.Node.clearTimeout = null;
-js.Node.setInterval = null;
-js.Node.clearInterval = null;
-js.Node.global = null;
-js.Node.__filename = null;
-js.Node.__dirname = null;
-js.Node.module = null;
-js.Node.stringify = null;
-js.Node.parse = null;
-js.Node.queryString = null;
 js.Node.newSocket = function(options) {
 	return new js.Node.net.Socket(options);
 }
 var org = {}
 org.jinjor = {}
 org.jinjor.haxemine = {}
+org.jinjor.haxemine.client = {}
+org.jinjor.haxemine.client.HaxemineSocket = function(socket,scope) {
+	this.socket = socket;
+	this.on = function(key,f) {
+		socket.on(key,function(data) {
+			f(data);
+			console.log("receive:" + key);
+			eval("scope.$" + "apply()");
+		});
+	};
+	this.emit = $bind(socket,socket.emit);
+};
+$hxClasses["org.jinjor.haxemine.client.HaxemineSocket"] = org.jinjor.haxemine.client.HaxemineSocket;
+org.jinjor.haxemine.client.HaxemineSocket.__name__ = ["org","jinjor","haxemine","client","HaxemineSocket"];
+org.jinjor.haxemine.client.HaxemineSocket.prototype = {
+	__class__: org.jinjor.haxemine.client.HaxemineSocket
+}
 org.jinjor.haxemine.messages = {}
 org.jinjor.haxemine.messages.SocketMessage = function(socket,key) {
 	var _g = this;
-	this.funcs = new Hash();
+	console.log(socket);
+	this.funcs = new haxe.ds.StringMap();
 	this.pub = function(data) {
 		socket.emit(key,haxe.Serializer.run(data));
 	};
@@ -2036,10 +1134,7 @@ org.jinjor.haxemine.messages.SocketMessage = function(socket,key) {
 $hxClasses["org.jinjor.haxemine.messages.SocketMessage"] = org.jinjor.haxemine.messages.SocketMessage;
 org.jinjor.haxemine.messages.SocketMessage.__name__ = ["org","jinjor","haxemine","messages","SocketMessage"];
 org.jinjor.haxemine.messages.SocketMessage.prototype = {
-	funcs: null
-	,sub: null
-	,pub: null
-	,__class__: org.jinjor.haxemine.messages.SocketMessage
+	__class__: org.jinjor.haxemine.messages.SocketMessage
 }
 org.jinjor.haxemine.messages.AllHaxeFilesM = function(socket) {
 	org.jinjor.haxemine.messages.SocketMessage.call(this,socket,"search");
@@ -2082,11 +1177,7 @@ org.jinjor.haxemine.messages.CompileError.parseTypeScriptCompileErrorMessage = f
 	return { path : elms[0], row : Std.parseInt(r.matched(1)), column : Std.parseInt(r.matched(2)), message : elms[elms.length - 1]};
 }
 org.jinjor.haxemine.messages.CompileError.prototype = {
-	message: null
-	,row: null
-	,path: null
-	,originalMessage: null
-	,__class__: org.jinjor.haxemine.messages.CompileError
+	__class__: org.jinjor.haxemine.messages.CompileError
 }
 org.jinjor.haxemine.messages.DoTaskM = function(socket) {
 	org.jinjor.haxemine.messages.SocketMessage.call(this,socket,"doTask");
@@ -2113,9 +1204,7 @@ org.jinjor.haxemine.messages.FileDetail = function(text,mode) {
 $hxClasses["org.jinjor.haxemine.messages.FileDetail"] = org.jinjor.haxemine.messages.FileDetail;
 org.jinjor.haxemine.messages.FileDetail.__name__ = ["org","jinjor","haxemine","messages","FileDetail"];
 org.jinjor.haxemine.messages.FileDetail.prototype = {
-	mode: null
-	,text: null
-	,__class__: org.jinjor.haxemine.messages.FileDetail
+	__class__: org.jinjor.haxemine.messages.FileDetail
 }
 org.jinjor.haxemine.messages.InitialInfoDto = function(mode,projectRoot,allFiles,taskInfos,searchEnabled) {
 	this.projectRoot = projectRoot;
@@ -2126,12 +1215,7 @@ org.jinjor.haxemine.messages.InitialInfoDto = function(mode,projectRoot,allFiles
 $hxClasses["org.jinjor.haxemine.messages.InitialInfoDto"] = org.jinjor.haxemine.messages.InitialInfoDto;
 org.jinjor.haxemine.messages.InitialInfoDto.__name__ = ["org","jinjor","haxemine","messages","InitialInfoDto"];
 org.jinjor.haxemine.messages.InitialInfoDto.prototype = {
-	searchEnabled: null
-	,taskInfos: null
-	,allFiles: null
-	,projectRoot: null
-	,mode: null
-	,__class__: org.jinjor.haxemine.messages.InitialInfoDto
+	__class__: org.jinjor.haxemine.messages.InitialInfoDto
 }
 org.jinjor.haxemine.messages.InitialInfoM = function(socket) {
 	org.jinjor.haxemine.messages.SocketMessage.call(this,socket,"initialInfo");
@@ -2149,9 +1233,7 @@ org.jinjor.haxemine.messages.SaveFileDto = function(fileName,text) {
 $hxClasses["org.jinjor.haxemine.messages.SaveFileDto"] = org.jinjor.haxemine.messages.SaveFileDto;
 org.jinjor.haxemine.messages.SaveFileDto.__name__ = ["org","jinjor","haxemine","messages","SaveFileDto"];
 org.jinjor.haxemine.messages.SaveFileDto.prototype = {
-	text: null
-	,fileName: null
-	,__class__: org.jinjor.haxemine.messages.SaveFileDto
+	__class__: org.jinjor.haxemine.messages.SaveFileDto
 }
 org.jinjor.haxemine.messages.SaveM = function(socket) {
 	org.jinjor.haxemine.messages.SocketMessage.call(this,socket,"save");
@@ -2179,10 +1261,7 @@ org.jinjor.haxemine.messages.SearchResult = function(fileName,row,message) {
 $hxClasses["org.jinjor.haxemine.messages.SearchResult"] = org.jinjor.haxemine.messages.SearchResult;
 org.jinjor.haxemine.messages.SearchResult.__name__ = ["org","jinjor","haxemine","messages","SearchResult"];
 org.jinjor.haxemine.messages.SearchResult.prototype = {
-	message: null
-	,row: null
-	,fileName: null
-	,__class__: org.jinjor.haxemine.messages.SearchResult
+	__class__: org.jinjor.haxemine.messages.SearchResult
 }
 org.jinjor.haxemine.messages.SearchResultM = function(socket) {
 	org.jinjor.haxemine.messages.SocketMessage.call(this,socket,"search-result");
@@ -2205,9 +1284,7 @@ org.jinjor.haxemine.messages.SourceFile.equals = function(o1,o2) {
 	return o1.pathFromProjectRoot == o2.pathFromProjectRoot;
 }
 org.jinjor.haxemine.messages.SourceFile.prototype = {
-	shortName: null
-	,pathFromProjectRoot: null
-	,__class__: org.jinjor.haxemine.messages.SourceFile
+	__class__: org.jinjor.haxemine.messages.SourceFile
 }
 org.jinjor.haxemine.messages.TaskInfo = function(taskName,content,auto) {
 	this.taskName = taskName;
@@ -2217,10 +1294,7 @@ org.jinjor.haxemine.messages.TaskInfo = function(taskName,content,auto) {
 $hxClasses["org.jinjor.haxemine.messages.TaskInfo"] = org.jinjor.haxemine.messages.TaskInfo;
 org.jinjor.haxemine.messages.TaskInfo.__name__ = ["org","jinjor","haxemine","messages","TaskInfo"];
 org.jinjor.haxemine.messages.TaskInfo.prototype = {
-	auto: null
-	,content: null
-	,taskName: null
-	,__class__: org.jinjor.haxemine.messages.TaskInfo
+	__class__: org.jinjor.haxemine.messages.TaskInfo
 }
 org.jinjor.haxemine.messages.TaskProgress = function(taskName,compileErrors) {
 	this.taskName = taskName;
@@ -2229,9 +1303,7 @@ org.jinjor.haxemine.messages.TaskProgress = function(taskName,compileErrors) {
 $hxClasses["org.jinjor.haxemine.messages.TaskProgress"] = org.jinjor.haxemine.messages.TaskProgress;
 org.jinjor.haxemine.messages.TaskProgress.__name__ = ["org","jinjor","haxemine","messages","TaskProgress"];
 org.jinjor.haxemine.messages.TaskProgress.prototype = {
-	compileErrors: null
-	,taskName: null
-	,__class__: org.jinjor.haxemine.messages.TaskProgress
+	__class__: org.jinjor.haxemine.messages.TaskProgress
 }
 org.jinjor.haxemine.messages.TaskProgressM = function(socket) {
 	org.jinjor.haxemine.messages.SocketMessage.call(this,socket,"taskProgress");
@@ -2302,11 +1374,7 @@ org.jinjor.haxemine.server.HaxemineConfig = function(port,mode,hxml,commands) {
 $hxClasses["org.jinjor.haxemine.server.HaxemineConfig"] = org.jinjor.haxemine.server.HaxemineConfig;
 org.jinjor.haxemine.server.HaxemineConfig.__name__ = ["org","jinjor","haxemine","server","HaxemineConfig"];
 org.jinjor.haxemine.server.HaxemineConfig.prototype = {
-	commands: null
-	,hxml: null
-	,mode: null
-	,port: null
-	,__class__: org.jinjor.haxemine.server.HaxemineConfig
+	__class__: org.jinjor.haxemine.server.HaxemineConfig
 }
 org.jinjor.haxemine.server.HaxemineConfigDao = function() {
 };
@@ -2336,7 +1404,7 @@ org.jinjor.haxemine.server.HaxemineConfigDao.prototype = {
 				files.sort(function(f1,f2) {
 					return StringTools.startsWith(f1,"build") && StringTools.startsWith(f2,"compile")?1:-1;
 				});
-				var xhml = Lambda.array(Lambda.map(files,function(file) {
+				var xhml = Lambda.array(files.map(function(file) {
 					return { path : file, auto : true};
 				}));
 				var conf = new org.jinjor.haxemine.server.HaxemineConfig(8765,"haxe",xhml,[]);
@@ -2390,11 +1458,11 @@ org.jinjor.haxemine.server.Main.startApp = function(projectRoot,conf) {
 	org.jinjor.haxemine.server.Console.print("projectRoot:" + projectRoot);
 	org.jinjor.haxemine.server.Console.print("port:" + conf.port);
 	var mode = conf.mode == "typescript"?org.jinjor.haxemine.server.Mode.TypeScript:org.jinjor.haxemine.server.Mode.Haxe;
-	var taskInfos = conf.mode == "typescript"?Lambda.array(Lambda.map(conf.commands,function(command) {
+	var taskInfos = conf.mode == "typescript"?Lambda.array(conf.commands.map(function(command) {
 		var name = "typescript_beta";
 		var content = command.command;
 		return new org.jinjor.haxemine.messages.TaskInfo(name,content,command.auto == null?true:command.auto);
-	})):Lambda.array(Lambda.map(conf.hxml,function(hxml) {
+	})):Lambda.array(conf.hxml.map(function(hxml) {
 		var name = hxml.path;
 		var content = org.jinjor.haxemine.server.Main.fs.readFileSync(projectRoot + "/" + hxml.path,"utf8");
 		return new org.jinjor.haxemine.messages.TaskInfo(name,content,hxml.auto == null?true:hxml.auto);
@@ -2422,7 +1490,7 @@ org.jinjor.haxemine.server.Main.startApp = function(projectRoot,conf) {
 		if(fileName == null) res.send(); else {
 			res.contentType("application/json");
 			console.log(req.query.fileName);
-			res.send(haxe.Json.stringify(org.jinjor.haxemine.server.Service.findFromSrc(projectRoot + "/" + fileName)));
+			res.send(js.Node.stringify(org.jinjor.haxemine.server.Service.findFromSrc(projectRoot + "/" + fileName),null,null));
 		}
 	});
 	var server = org.jinjor.haxemine.server.Main.http.createServer(app);
@@ -2519,7 +1587,7 @@ org.jinjor.haxemine.server.Service.save = function(mode,projectRoot,data,allHaxe
 	socket.emit("stdout","saved");
 }
 org.jinjor.haxemine.server.Service.doTask = function(conf,projectRoot,socket,taskProgressM,taskName) {
-	var tasks = Lambda.array(Lambda.filter(conf.hxml,function(hxml) {
+	var tasks = Lambda.array(conf.hxml.filter(function(hxml) {
 		return hxml.path == taskName;
 	}).map(function(hxml) {
 		var task = org.jinjor.haxemine.server.Service.createCompileHaxeTask(socket,taskProgressM,projectRoot,hxml.path);
@@ -2529,12 +1597,12 @@ org.jinjor.haxemine.server.Service.doTask = function(conf,projectRoot,socket,tas
 	});
 }
 org.jinjor.haxemine.server.Service.doAutoTasks = function(conf,projectRoot,socket,taskProgressM) {
-	var tasks = conf.mode == "typescript"?Lambda.array(Lambda.filter(conf.commands,function(command) {
+	var tasks = conf.mode == "typescript"?Lambda.array(conf.commands.filter(function(command) {
 		return command.auto != null && command.auto;
 	}).map(function(command) {
 		var task = org.jinjor.haxemine.server.Service.createCompileTypeScriptTask(socket,taskProgressM,projectRoot,"typescript_beta",command.command);
 		return task;
-	})):Lambda.array(Lambda.filter(conf.hxml,function(hxml) {
+	})):Lambda.array(conf.hxml.filter(function(hxml) {
 		return hxml.auto != null && hxml.auto;
 	}).map(function(hxml) {
 		var task = org.jinjor.haxemine.server.Service.createCompileHaxeTask(socket,taskProgressM,projectRoot,hxml.path);
@@ -2550,7 +1618,7 @@ org.jinjor.haxemine.server.Service.searchWord = function(word,mode,cb) {
 		org.jinjor.haxemine.server.Service.childProcess.exec(command,function(err,stdout,stderr) {
 			if(err != null) cb(null,[]); else {
 				var messages = stdout.split("\n");
-				var results = Lambda.array(Lambda.filter(messages,function(message) {
+				var results = Lambda.array(messages.filter(function(message) {
 					return message != "";
 				}).map(function(message) {
 					console.log(message);
@@ -2599,7 +1667,7 @@ org.jinjor.haxemine.server.Service.compile = function(mode,socket,taskProgressM,
 			var $r;
 			var msg = stderr;
 			var messages = msg.split("\n");
-			var compileErrors1 = Lambda.array(Lambda.filter(messages,function(message) {
+			var compileErrors1 = Lambda.array(messages.filter(function(message) {
 				return message != "";
 			}).map(function(message) {
 				if(StringTools.startsWith(message,"./")) message = message.substring("./".length);
@@ -2631,7 +1699,7 @@ org.jinjor.haxemine.server.Service.getAllFiles = function(projectRoot,mode,_call
 	};
 	org.jinjor.haxemine.server.FileUtil.getAllMatchedFiles(projectRoot,filter,function(err,filePaths) {
 		if(err != null) _callback(err,null); else {
-			var files = new Hash();
+			var files = new haxe.ds.StringMap();
 			Lambda.foreach(filePaths,function(f) {
 				files.set(f,new org.jinjor.haxemine.messages.SourceFile(f));
 				return true;
@@ -2657,14 +1725,8 @@ org.jinjor.util.Util.compareTo = function(a,b) {
 	return a < b?-1:a > b?1:0;
 }
 function $iterator(o) { if( o instanceof Array ) return function() { return HxOverrides.iter(o); }; return typeof(o.iterator) == 'function' ? $bind(o,o.iterator) : o.iterator; };
-var $_;
-function $bind(o,m) { var f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; return f; };
-if(Array.prototype.indexOf) HxOverrides.remove = function(a,o) {
-	var i = a.indexOf(o);
-	if(i == -1) return false;
-	a.splice(i,1);
-	return true;
-}; else null;
+var $_, $fid = 0;
+function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; };
 Math.__name__ = ["Math"];
 Math.NaN = Number.NaN;
 Math.NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
@@ -2690,17 +1752,6 @@ var Bool = $hxClasses.Bool = Boolean;
 Bool.__ename__ = ["Bool"];
 var Class = $hxClasses.Class = { __name__ : ["Class"]};
 var Enum = { };
-var Void = $hxClasses.Void = { __ename__ : ["Void"]};
-if(typeof(JSON) != "undefined") haxe.Json = JSON;
-if(typeof document != "undefined") js.Lib.document = document;
-if(typeof window != "undefined") {
-	js.Lib.window = window;
-	js.Lib.window.onerror = function(msg,url,line) {
-		var f = js.Lib.onerror;
-		if(f == null) return false;
-		return f(msg,[url + ":" + line]);
-	};
-}
 js.Node.__filename = __filename;
 js.Node.__dirname = __dirname;
 js.Node.setTimeout = setTimeout;
@@ -2738,8 +1789,7 @@ haxe.Serializer.USE_ENUM_INDEX = false;
 haxe.Serializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%:";
 haxe.Unserializer.DEFAULT_RESOLVER = Type;
 haxe.Unserializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%:";
-haxe.Unserializer.CODES = null;
-js.Lib.onerror = null;
+haxe.ds.ObjectMap.count = 0;
 js.NodeC.UTF8 = "utf8";
 js.NodeC.ASCII = "ascii";
 js.NodeC.BINARY = "binary";

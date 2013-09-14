@@ -189,7 +189,8 @@ class Service {
 
     
     
-    public static function getAllFiles(projectRoot : String, mode: Mode, _callback : Dynamic -> Hash<SourceFile> -> Void){
+    public static function getAllFiles(projectRoot : String, mode: Mode,
+        _callback : Dynamic -> Map<String, SourceFile> -> Void){
         var filter = function(item : String){
             return item.endsWith(getPostfix(mode));
         };
@@ -197,7 +198,7 @@ class Service {
             if(err != null){
                 _callback(err, null);
             }else{
-                var files = new Hash<SourceFile>();
+                var files = new Map<String, SourceFile>();
                 filePaths.foreach(function(f){
                     files.set(f, new SourceFile(f));
                     return true;
