@@ -2,7 +2,7 @@ package org.jinjor.haxemine.client.view;
 
 import org.jinjor.haxemine.messages.DoTaskM;
 import org.jinjor.haxemine.messages.TaskProgressM;
-
+import org.jinjor.haxemine.client.view.TaskListView;
 
 using Lambda;
 

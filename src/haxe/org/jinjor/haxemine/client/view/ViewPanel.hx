@@ -3,7 +3,6 @@ package org.jinjor.haxemine.client.view;
 import js.JQuery;
 
 import org.jinjor.haxemine.messages.AllMessages;
-import org.jinjor.haxemine.client.view.TaskListView;
 import org.jinjor.haxemine.client.view.CompileErrorPanel;
 import org.jinjor.haxemine.client.view.SearchPanel;
 
