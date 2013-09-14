@@ -1416,7 +1416,6 @@ $hxClasses["org.jinjor.haxemine.client.view.TaskView"] = org.jinjor.haxemine.cli
 org.jinjor.haxemine.client.view.TaskView.__name__ = ["org","jinjor","haxemine","client","view","TaskView"];
 org.jinjor.haxemine.messages.SocketMessage = function(socket,key) {
 	var _g = this;
-	console.log(socket);
 	this.funcs = new haxe.ds.StringMap();
 	this.pub = function(data) {
 		socket.emit(key,haxe.Serializer.run(data));
@@ -1883,14 +1882,14 @@ haxe.Unserializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 haxe.ds.ObjectMap.count = 0;
 js.Browser.window = typeof window != "undefined" ? window : null;
 org.jinjor.haxemine.client.view.AceEditorView.template = "\r\n<div id=\"editor\" reset=\"reset(session)\"/></div>\r\n    ";
-org.jinjor.haxemine.client.view.CompileErrorPanel.template = "\r\n<div id=\"compile-error-panel\"/>\r\n    <tasklist session=\"session\"></tasklist>\r\n    <div id=\"compile-errors\">\r\n        <ul>\r\n            <li ng-repeat=\"error in session.getCompileErrors()\">\r\n                <a ng-click=\"c(session, error)\">{{error.originalMessage}}</a>\r\n            </li>\r\n        </ul>\r\n    </div>\r\n</div>\r\n    ";
+org.jinjor.haxemine.client.view.CompileErrorPanel.template = "\r\n<div id=\"compile-error-panel\">\r\n    <tasklist session=\"session\"></tasklist>\r\n    <div id=\"compile-errors\">\r\n        <ul>\r\n            <li ng-repeat=\"error in session.getCompileErrors()\">\r\n                <a ng-click=\"c(session, error)\">{{error.originalMessage}}</a>\r\n            </li>\r\n        </ul>\r\n    </div>\r\n</div>\r\n    ";
 org.jinjor.haxemine.client.view.FileSelector.template = "\r\n<div id=\"all-haxe-files\">\r\n        <folder session=\"session\" dir=\"dir\" ng-repeat=\"dir in session.dirs\"></folder>\r\n</div>\r\n";
 org.jinjor.haxemine.client.view.Folder.template = "\r\n<div class=\"folder\">\r\n    <div>\r\n        <div ng-show=\"open\" class=\"closeMark\" ng-click=\"change(false)\">-</div>\r\n        <div ng-hide=\"open\" class=\"openMark\" ng-click=\"change(true)\">+</div>\r\n        <label class=\"file_selector_dir\">{{dir.name}}</label>\r\n    </div>\r\n    <div ng-show=\"open\">\r\n        <ul>\r\n            <li ng-repeat=\"file in dir.files\">\r\n                <a ng-click=\"c(session, file.pathFromProjectRoot)\">{{file.shortName}}</a>\r\n            </li>\r\n        </ul>\r\n    </div>\r\n</div>\r\n    ";
 org.jinjor.haxemine.client.view.Menu.template = "\r\n<nav id=\"menu\">{{session.connected.fds}}\r\n    <label ng-show=\"session.connected\"><!--{{session.projectRoot}}-->Haxemine</label>\r\n    <label ng-show=\"!session.connected\" class=\"disconnected\">Disconnected</label>\r\n</nav>\r\n    ";
 org.jinjor.haxemine.client.view.SearchPanel.template = "\r\n<div>\r\n    <form ng-submit=\"s(session, word)\" ng-disabled=\"session.searchWaiting\">\r\n        <input type=\"text\" ng-model=\"word\">\r\n        <input type=\"submit\" value=\"Search\">\r\n    </form>\r\n    <div>\r\n        <div ng-repeat=\"result in session.searchResults\">\r\n            <a ng-click=\"a(session, result)\">{{result.message}}</a>\r\n        </div>\r\n    </div>\r\n</div>\r\n    ";
 org.jinjor.haxemine.client.view.TaskListView.template = "\r\n<div id=\"task-list-view\">\r\n    <task session=\"session\" task=\"task\" ng-repeat=\"task in session.tasks\"></task>\r\n</div>\r\n    ";
 org.jinjor.haxemine.client.view.TaskView.template = "\r\n<div class=\"task-view {{c(session, task)}}\" title=\"{{task.content}}\" ng-click=\"cl(session, task)\">\r\n    {{task.name}}\r\n</div>\r\n    ";
-org.jinjor.haxemine.client.view.ViewPanel.template = "\r\n<div id=\"view_panel\">\r\n    <div id=\"tabsContainer\" >\r\n        <span class=\"view-tab {{selected('tasks')}}\" ng-click=\"t('tasks')\">Tasks</span>\r\n        <span class=\"view-tab {{selected('search')}}\" ng-click=\"t('search')\">Search</span>\r\n    </div>\r\n    <div id=\"panelsContainer\">\r\n        <div ng-show=\"selected('tasks')\">\r\n            <tasklist session=\"session\"></tasklist>\r\n        </div>\r\n        <div ng-show=\"selected('search')\">\r\n            <search session=\"session\"></search>\r\n        </div>\r\n    </div>\r\n</div>\r\n    ";
+org.jinjor.haxemine.client.view.ViewPanel.template = "\r\n<div id=\"view_panel\">\r\n    <div id=\"tabsContainer\" >\r\n        <span class=\"view-tab {{selected('tasks')}}\" ng-click=\"t('tasks')\">Tasks</span>\r\n        <span class=\"view-tab {{selected('search')}}\" ng-click=\"t('search')\">Search</span>\r\n    </div>\r\n    <div id=\"panelsContainer\">\r\n        <div ng-show=\"selected('tasks')\">\r\n            <compileerror session=\"session\"></compileerror>\r\n        </div>\r\n        <div ng-show=\"selected('search')\">\r\n            <search session=\"session\"></search>\r\n        </div>\r\n    </div>\r\n</div>\r\n    ";
 org.jinjor.haxemine.client.Main.main();
 })();
 

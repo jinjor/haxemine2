@@ -17,7 +17,7 @@ class ViewPanel {
     </div>
     <div id="panelsContainer">
         <div ng-show="selected(\'tasks\')">
-            <tasklist session="session"></tasklist>
+            <compileerror session="session"></compileerror>
         </div>
         <div ng-show="selected(\'search\')">
             <search session="session"></search>

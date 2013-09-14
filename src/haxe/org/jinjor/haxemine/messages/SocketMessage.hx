@@ -9,7 +9,6 @@ class SocketMessage<T> {
     var funcs : Map<String, T -> Void>;
     
     public function new(socket : HaxemineSocket, key : String) {
-        untyped console.log(socket);
         this.funcs = new Map();
         this.pub = function(data : T){
             socket.emit(key, haxe.Serializer.run(data));

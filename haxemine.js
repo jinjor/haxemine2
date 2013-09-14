@@ -1117,7 +1117,6 @@ org.jinjor.haxemine.client.HaxemineSocket.prototype = {
 org.jinjor.haxemine.messages = {}
 org.jinjor.haxemine.messages.SocketMessage = function(socket,key) {
 	var _g = this;
-	console.log(socket);
 	this.funcs = new haxe.ds.StringMap();
 	this.pub = function(data) {
 		socket.emit(key,haxe.Serializer.run(data));
