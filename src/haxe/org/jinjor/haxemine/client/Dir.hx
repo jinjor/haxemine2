@@ -1,4 +1,4 @@
-package org.jinjor.haxemine.client.view;
+package org.jinjor.haxemine.client;
 
 import org.jinjor.haxemine.messages.SourceFile;
 

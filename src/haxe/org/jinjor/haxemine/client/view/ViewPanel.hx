@@ -26,6 +26,16 @@ class ViewPanel {
 </div>
     ';
     
+    static var link = function(scope, element, attrs) {
+        var selected = 'tasks';
+        scope.t = function(name){
+            selected = name;
+        };
+        scope.selected = function(name){
+            return selected == name ? 'selected' : '';
+        };
+    };
+    
     static function __init__(){
         HaxemineModule.module.directive('viewpanel', function(){
             return {
@@ -35,15 +45,7 @@ class ViewPanel {
                     session: '='
                 },
                 template: template,
-                link: function(scope, element, attrs) {
-                    var selected = 'tasks';
-                    scope.t = function(name){
-                        selected = name;
-                    };
-                    scope.selected = function(name){
-                        return selected == name ? 'selected' : '';
-                    };
-                }
+                link: link
             }
         });
     }

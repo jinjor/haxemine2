@@ -5,11 +5,29 @@ import org.jinjor.haxemine.messages.DoTaskM;
 
 class TaskView {
     
-    private static var template = '
+    static var template = '
 <div class="task-view {{c(session, task)}}" title="{{task.content}}" ng-click="cl(session, task)">
     {{task.name}}
 </div>
     ';
+    
+    static var link = function(scope, element, attrs) {
+        scope.c = function(session : Session, task : TaskModel) {
+            return switch(task.state){
+                case NONE: '';
+                case WAITING: '';
+                case SUCCESS: 'success';
+                case FAILED: 'failed';
+                case READY : 'ready';
+            };
+        };
+        scope.cl = function(session : Session, task : TaskModel){
+            if(task.state == TaskModelState.READY){
+                task.setState(TaskModelState.WAITING);
+                session.doTask(task.name);
+            }
+        };
+    };
     
     static function __init__(){
         HaxemineModule.module.directive('task', function(){
@@ -21,23 +39,7 @@ class TaskView {
                     task: '='
                 },
                 template: template,
-                link: function(scope, element, attrs) {
-                    scope.c = function(session : Session, task : TaskModel) {
-                        return switch(task.state){
-                            case NONE: '';
-                            case WAITING: '';
-                            case SUCCESS: 'success';
-                            case FAILED: 'failed';
-                            case READY : 'ready';
-                        };
-                    };
-                    scope.cl = function(session : Session, task : TaskModel){
-                        if(task.state == TaskModelState.READY){
-                            task.setState(TaskModelState.WAITING);
-                            session.doTask(task.name);
-                        }
-                    };
-                }
+                link: link
             }
         });
     }

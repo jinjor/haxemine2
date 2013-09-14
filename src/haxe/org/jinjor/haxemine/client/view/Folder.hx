@@ -17,7 +17,7 @@ using Lambda;
 
 class Folder {
     
-    private static var template = '
+    static var template = '
 <div class="folder">
     <div>
         <div ng-show="open" class="closeMark" ng-click="change(false)">-</div>
@@ -26,13 +26,48 @@ class Folder {
     </div>
     <div ng-show="open">
         <ul>
-            <li ng-repeat="file in dir.files">
+            <li ng-repeat="file in dir.files" ng-class="{error: session.getCompileErrorsByFile(file).length > 0}">
                 <a ng-click="c(session, file.pathFromProjectRoot)">{{file.shortName}}</a>
             </li>
         </ul>
     </div>
 </div>
     ';
+    
+    static var link = function(scope, element, attrs) {
+        scope.c = function(session : Session, path){
+            var file = session.getAllFiles().get(path);
+            session.selectNextFile(file, null);
+        };
+        scope.d = function(session : Session, path){
+            var guessedPackage = path.replace('/', '.');
+            var classPath = Browser.window.prompt("create new class", guessedPackage + '.');
+            if(classPath != null){
+                var splittedClass = classPath.split('.');
+                var className = splittedClass[splittedClass.length-1];
+                if(className == ''){
+                    Lib.alert('invalid name');
+                }else{
+                    var text =
+'package ${classPath.substring(0, classPath.length - className.length - 1)};
+
+class ${className} {
+
+    public function new() {
+        
+    }
+}';
+                    saveNewFile(session.saveM, session, '$path/${className}.hx', text);
+                }
+            }
+        };
+        scope.change = function(open){
+            scope.open = open;
+        };
+        scope.a = function(session : Session, file : SourceFile){
+            session.selectNextFile(file);
+        };
+    }
     
     static function __init__(){
         HaxemineModule.module.directive('folder', function(){
@@ -44,40 +79,7 @@ class Folder {
                     dir: '='
                 },
                 template: template,
-                link: function(scope, element, attrs) {
-                    scope.c = function(session : Session, path){
-                        var file = session.getAllFiles().get(path);
-                        session.selectNextFile(file, null);
-                    };
-                    scope.d = function(session : Session, path){
-                        var guessedPackage = path.replace('/', '.');
-                        var classPath = Browser.window.prompt("create new class", guessedPackage + '.');
-                        if(classPath != null){
-                            var splittedClass = classPath.split('.');
-                            var className = splittedClass[splittedClass.length-1];
-                            if(className == ''){
-                                Lib.alert('invalid name');
-                            }else{
-                                var text =
-'package ${classPath.substring(0, classPath.length - className.length - 1)};
-
-class ${className} {
-
-    public function new() {
-        
-    }
-}';
-                                saveNewFile(session.saveM, session, '$path/${className}.hx', text);
-                            }
-                        }
-                    };
-                    scope.change = function(open){
-                        scope.open = open;
-                    };
-                    scope.a = function(session : Session, file : SourceFile){
-                        session.selectNextFile(file);
-                    };
-                }
+                link: link
             }
         });
     }

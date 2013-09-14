@@ -8,7 +8,7 @@ using org.jinjor.util.ClientUtil;
 
 class SearchPanel {
     
-    private static var template = '
+    static var template = '
 <div>
     <form ng-submit="s(session, word)" ng-disabled="session.searchWaiting">
         <input type="text" ng-model="word">
@@ -22,6 +22,16 @@ class SearchPanel {
 </div>
     ';
     
+    static var link = function(scope, element, attrs) {
+        scope.a = function(session : Session, result){
+            var file = session.getAllFiles().get(result.fileName);
+            session.selectNextFile(file, result.row);
+        };
+        scope.s = function(session : Session, word){
+            session.search(word);
+        };
+    };
+    
     static function __init__(){
         HaxemineModule.module.directive('search', function(){
             return {
@@ -31,15 +41,7 @@ class SearchPanel {
                     session: '='
                 },
                 template: template,
-                link: function(scope, element, attrs) {
-                    scope.a = function(session : Session, result){
-                        var file = session.getAllFiles().get(result.fileName);
-                        session.selectNextFile(file, result.row);
-                    };
-                    scope.s = function(session : Session, word){
-                        session.search(word);
-                    };
-                }
+                link: link
             }
         });
     }

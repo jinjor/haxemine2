@@ -154,6 +154,14 @@ input[type="submit"]:hover {
 .folder ul {
   margin-left: 16px;
 }
+.folder ul {
+  margin-left: 16px;
+}
+.folder li.error a:before{
+  content:"✘";
+  color:hsl(0, 30%, 50%);
+}
+
 .openMark {
   margin-right: 2px;
   border: 1px solid #668;

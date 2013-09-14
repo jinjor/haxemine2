@@ -20,8 +20,7 @@ import org.jinjor.haxemine.messages.SearchM;
 import org.jinjor.haxemine.messages.SearchResultM;
 
 import org.jinjor.haxemine.server.Mode;
-
-import org.jinjor.haxemine.client.view.Dir;//TODO
+import org.jinjor.haxemine.client.Dir;
 
 using Lambda;
 using org.jinjor.util.Util;
@@ -30,7 +29,6 @@ import org.jinjor.util.Event2;
 
 class Session {
 
-    var socket : HaxemineSocket;
     var onSocketDisconnected : Event<Dynamic>;
     var onAllFilesChanged : Event<Dynamic>;
     public var onLastTaskProgressChanged : Event<Dynamic>;
@@ -66,7 +64,6 @@ class Session {
         dirs = [];
         
         var that = this;
-        this.socket = socket;
         var initialInfoM = new InitialInfoM(socket);
         var allHaxeFilesM = new AllHaxeFilesM(socket);
         var doTasksM = new DoTasksM(socket);

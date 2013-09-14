@@ -8,7 +8,7 @@ using Lambda;
 
 class CompileErrorPanel {
 
-    private static var template = '
+    static var template = '
 <div id="compile-error-panel">
     <tasklist session="session"></tasklist>
     <div id="compile-errors">
@@ -21,6 +21,14 @@ class CompileErrorPanel {
 </div>
     ';
     
+    static var link = function(scope, element, attrs) {
+        scope.c = function(session : Session, error){
+            var file = session.getAllFiles().get(error.path);
+            var row = error.row;
+            session.selectNextFile(file, row);
+        };
+    };
+    
     static function __init__(){
         HaxemineModule.module.directive('compileerror', function(){
             return {
@@ -30,13 +38,7 @@ class CompileErrorPanel {
                     session: '='
                 },
                 template: template,
-                link: function(scope, element, attrs) {
-                    scope.c = function(session : Session, error){
-                        var file = session.getAllFiles().get(error.path);
-                        var row = error.row;
-                        session.selectNextFile(file, row);
-                    };
-                }
+                link: link
             }
         });
     }
